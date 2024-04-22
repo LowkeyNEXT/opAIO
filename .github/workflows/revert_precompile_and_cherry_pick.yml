@@ -1,0 +1,51 @@
+name: Revert Commit After Sync
+
+on:
+  workflow_run:
+    workflows: ["Sync FrogPilot-Staging"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  revert-commit:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Configure Git to skip symlinks
+        run: git config --global core.symlinks false
+        
+      - name: Checkout repo without symlinks
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Ensure you fetch all history for commits, tags, etc
+          persist-credentials: false
+
+      - name: Setup Git Config
+        run: |
+          git config --global user.email "55640145+BRid37@users.noreply.github.com"
+          git config --global user.name "BRid37"
+
+      - name: Ensure clean state
+        run: |
+          git checkout fp-FrogPilot-Staging
+          git fetch origin fp-FrogPilot-Staging
+          git reset --hard origin/fp-FrogPilot-Staging
+          git clean -fdx
+
+      - name: Find commit hash by name and revert
+        run: |
+          git log --oneline --first-parent --grep "Compile FrogPilot" fp-FrogPilot-Staging > log.txt
+          commit=$(cat log.txt | head -n 1 | cut -d " " -f 1)
+          echo "Commit to revert: $commit"
+          git revert $commit
+
+      - name: Cherry-pick commit
+        run: |
+          git cherry-pick 88fa811c7cb7e11969900872171c45ca690495d0
+
+      - name: Push changes
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git push origin fp-FrogPilot-Staging
+

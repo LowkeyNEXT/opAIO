@@ -1,0 +1,22 @@
+name: Sync commaai-master
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: commaai-master
+          persist-credentials: false
+      - name: Sync with Remote Repo
+        uses: repo-sync/github-sync@v2.3.0
+        with:
+          source_repo: "https://github.com/commaai/openpilot.git"
+          source_branch: "master"
+          destination_branch: "commaai-master"
+          github_token: ${{ secrets.PAT }}
