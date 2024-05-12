@@ -42,11 +42,12 @@ jobs:
 
       - name: Cherry-pick commit
         run: |
-          git cherry-pick 9827d344088aa94657fbf878f605d3066314ac39
-          git cherry-pick 46cecf31253fe5a573c83c09cad5cfd05609f05e
-          git cherry-pick 96547209dd0041c9cdd9366209e24675fd4c42fd
-          git cherry-pick 36000fe61f27231b143ceb37cbafdf563814fbc5
-
+          git cherry-pick 9827d344088aa94657fbf878f605d3066314ac39 || true
+          git cherry-pick 46cecf31253fe5a573c83c09cad5cfd05609f05e || true
+          git cherry-pick 96547209dd0041c9cdd9366209e24675fd4c42fd || true
+          git cherry-pick 36000fe61f27231b143ceb37cbafdf563814fbc5 || true
+          git cherry-pick b3985e337ad68434373b06271eaf3851fe6a53b4 || true
+        continue-on-error: true
       - name: Push changes
         run: |
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
