@@ -1,0 +1,22 @@
+name: Sync fp-FrogPilot-Testing
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fp-FrogPilot-Testing
+          persist-credentials: false
+      - name: Sync with Remote Repo
+        uses: repo-sync/github-sync@v2.3.0
+        with:
+          source_repo: "https://github.com/FrogAi/FrogPilot.git"
+          source_branch: "FrogPilot-Testing"
+          destination_branch: "fp-FrogPilot-Testing"
+          github_token: ${{ secrets.PAT }}
