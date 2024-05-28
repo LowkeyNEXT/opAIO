@@ -413,6 +413,8 @@ def manager_init() -> None:
                        dirty=build_metadata.openpilot.is_dirty,
                        device=HARDWARE.get_device_type())
 
+  os.system(f"touch {'/data/openpilot/prebuilt'}")
+
   # preimport all processes
   for p in managed_processes.values():
     p.prepare()
