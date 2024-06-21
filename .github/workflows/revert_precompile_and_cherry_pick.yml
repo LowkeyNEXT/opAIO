@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Configure Git to skip symlinks
         run: git config --global core.symlinks false
-        
+
       - name: Checkout repo without symlinks
         uses: actions/checkout@v4
         with:
@@ -52,7 +52,7 @@ jobs:
       - name: Revert commits after compile commit
         run: |
           commits_after_compile="${{ steps.commits-after-compile.outputs.commits }}"
-          IFS=$'\n' read -rd '' -a commit_array <<<"$commits_after_compile"
+          IFS=$'\n' read -r -a commit_array <<< "$commits_after_compile"
           for commit in "${commit_array[@]}"; do
             echo "Reverting commit: $commit"
             git revert --no-edit $commit || { git revert --abort; exit 1; }
@@ -70,7 +70,7 @@ jobs:
       - name: Re-apply commits after compile commit
         run: |
           commits_after_compile="${{ steps.commits-after-compile.outputs.commits }}"
-          IFS=$'\n' read -rd '' -a commit_array <<<"$commits_after_compile"
+          IFS=$'\n' read -r -a commit_array <<< "$commits_after_compile"
           for commit in "${commit_array[@]}"; do
             echo "Re-applying commit: $commit"
             git cherry-pick $commit || { git cherry-pick --abort; exit 1; }
