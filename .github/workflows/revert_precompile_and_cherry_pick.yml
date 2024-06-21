@@ -11,7 +11,6 @@ jobs:
   revert-commit:
     runs-on: ubuntu-latest
     steps:
-
       - name: Configure Git to skip symlinks
         run: git config --global core.symlinks false
         
@@ -33,23 +32,43 @@ jobs:
           git reset --hard origin/fp-FrogPilot-Staging
           git clean -fdx
 
-      - name: Find commit hash by name and revert
+      - name: Find compile commit and revert changes
         run: |
-          git log --oneline --first-parent --grep "Compile FrogPilot" fp-FrogPilot-Staging > log.txt
-          commit=$(cat log.txt | head -n 1 | cut -d " " -f 1)
-          echo "Commit to revert: $commit"
-          git revert $commit
+          # Find the commit hash for the "Compile FrogPilot" commit
+          compile_commit=$(git log --oneline --first-parent --grep "Compile FrogPilot" fp-FrogPilot-Staging | head -n 1 | cut -d " " -f 1)
+          echo "Compile commit to revert: $compile_commit"
+          
+          # Get all commits after the compile commit
+          commits_after_compile=$(git rev-list $compile_commit..HEAD | tail -n +2 | tac)
+          
+          # Revert all commits after the compile commit
+          if [ ! -z "$commits_after_compile" ]; then
+            for commit in $commits_after_compile; do
+              echo "Reverting commit: $commit"
+              git revert --no-commit $commit || git revert --abort
+            done
+          fi
 
-      - name: Cherry-pick commit
+          # Revert the compile commit itself
+          git revert --no-edit $compile_commit
+
+          # Re-apply all commits that were reverted in the first step
+          if [ ! -z "$commits_after_compile" ]; then
+            for commit in $commits_after_compile; do
+              echo "Re-applying commit: $commit"
+              git cherry-pick $commit || git cherry-pick --abort
+            done
+          fi
+
+      - name: Cherry-pick commits
         run: |
-          git cherry-pick 9827d344088aa94657fbf878f605d3066314ac39 || true
-          git cherry-pick 46cecf31253fe5a573c83c09cad5cfd05609f05e || true
-          git cherry-pick 88aad794038e1d37cf36c1982c8c69d960c19f85 || true
-          git cherry-pick 36000fe61f27231b143ceb37cbafdf563814fbc5 || true
-          git cherry-pick b3985e337ad68434373b06271eaf3851fe6a53b4 || true
-        continue-on-error: true
+          git cherry-pick 9827d344088aa94657fbf878f605d3066314ac39 || git cherry-pick --abort
+          git cherry-pick 46cecf31253fe5a573c83c09cad5cfd05609f05e || git cherry-pick --abort
+          git cherry-pick 88aad794038e1d37cf36c1982c8c69d960c19f85 || git cherry-pick --abort
+          git cherry-pick 36000fe61f27231b143ceb37cbafdf563814fbc5 || git cherry-pick --abort
+          git cherry-pick b3985e337ad68434373b06271eaf3851fe6a53b4 || git cherry-pick --abort
+
       - name: Push changes
         run: |
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git push origin fp-FrogPilot-Staging
-
