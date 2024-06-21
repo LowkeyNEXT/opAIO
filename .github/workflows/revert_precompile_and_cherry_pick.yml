@@ -55,7 +55,11 @@ jobs:
           IFS=$'\n' read -r -a commit_array <<< "$commits_after_compile"
           for commit in "${commit_array[@]}"; do
             echo "Reverting commit: $commit"
-            git revert --no-edit $commit || { git revert --abort; exit 1; }
+            git revert --no-edit $commit || {
+              echo "Conflict detected while reverting $commit."
+              git revert --abort
+              exit 1
+            }
             git add .
             git commit --allow-empty -m "Revert commit: $commit"
           done
@@ -63,7 +67,11 @@ jobs:
       - name: Revert the compile commit
         run: |
           compile_commit=${{ env.compile_commit }}
-          git revert --no-edit $compile_commit || { git revert --abort; exit 1; }
+          git revert --no-edit $compile_commit || {
+            echo "Conflict detected while reverting $compile_commit."
+            git revert --abort
+            exit 1
+          }
           git add .
           git commit --allow-empty -m "Revert compile commit: $compile_commit"
 
@@ -73,9 +81,11 @@ jobs:
           IFS=$'\n' read -r -a commit_array <<< "$commits_after_compile"
           for commit in "${commit_array[@]}"; do
             echo "Re-applying commit: $commit"
-            git cherry-pick $commit || { git cherry-pick --abort; exit 1; }
-            git add .
-            git commit --allow-empty -m "Re-apply commit: $commit"
+            git cherry-pick --strategy=recursive -X theirs $commit || {
+              echo "Conflict detected while cherry-picking $commit. Resolving using incoming changes."
+              git add -u
+              git cherry-pick --continue || git cherry-pick --abort
+            }
           done
 
       - name: Cherry-pick additional commits
@@ -88,9 +98,11 @@ jobs:
             b3985e337ad68434373b06271eaf3851fe6a53b4
           )
           for commit in "${cherry_picks[@]}"; do
-            git cherry-pick $commit || { git cherry-pick --abort; exit 1; }
-            git add .
-            git commit --allow-empty -m "Cherry-pick commit: $commit"
+            git cherry-pick --strategy=recursive -X theirs $commit || {
+              echo "Conflict detected while cherry-picking $commit. Resolving using incoming changes."
+              git add -u
+              git cherry-pick --continue || git cherry-pick --abort
+            }
           done
 
       - name: Push changes
