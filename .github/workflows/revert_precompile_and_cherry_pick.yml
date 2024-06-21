@@ -55,10 +55,10 @@ jobs:
           IFS=$'\n' read -r -a commit_array <<< "$commits_after_compile"
           for commit in "${commit_array[@]}"; do
             echo "Reverting commit: $commit"
-            git revert --no-edit $commit || {
-              echo "Conflict detected while reverting $commit."
-              git revert --abort
-              exit 1
+            git revert --no-edit $commit || { 
+              echo "Conflict detected while reverting $commit.";
+              git revert --abort; 
+              exit 1; 
             }
             git add .
             git commit --allow-empty -m "Revert commit: $commit"
@@ -68,9 +68,9 @@ jobs:
         run: |
           compile_commit=${{ env.compile_commit }}
           git revert --no-edit $compile_commit || {
-            echo "Conflict detected while reverting $compile_commit."
-            git revert --abort
-            exit 1
+            echo "Conflict detected while reverting $compile_commit.";
+            git revert --abort;
+            exit 1;
           }
           git add .
           git commit --allow-empty -m "Revert compile commit: $compile_commit"
@@ -109,4 +109,5 @@ jobs:
         run: |
           git checkout fp-FrogPilot-Staging
           git merge temp-branch
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git push origin fp-FrogPilot-Staging
