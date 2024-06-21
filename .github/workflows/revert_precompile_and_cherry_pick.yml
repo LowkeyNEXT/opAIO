@@ -49,6 +49,8 @@ jobs:
           compile_commit=${{ env.compile_commit }}
           # List all commits after the compile commit
           commits_after_compile=$(git rev-list $compile_commit..HEAD | tail -n +2 | tac)
+          # Use a delimiter (e.g., space) to separate commits
+          commits_after_compile=$(echo $commits_after_compile | tr '\n' ' ')
           echo "commits_after_compile=$commits_after_compile" >> $GITHUB_ENV
 
       - name: Revert commits after compile commit
@@ -58,7 +60,8 @@ jobs:
           
           # Revert all commits after the compile commit
           if [ ! -z "$commits_after_compile" ]; then
-            for commit in $commits_after_compile; do
+            IFS=' ' read -r -a commit_array <<< "$commits_after_compile"
+            for commit in "${commit_array[@]}"; do
               echo "Reverting commit: $commit"
               git revert --no-edit $commit || git revert --abort
               git add .
@@ -83,7 +86,8 @@ jobs:
           
           # Re-apply all commits that were reverted in the first step
           if [ ! -z "$commits_after_compile" ]; then
-            for commit in $commits_after_compile; do
+            IFS=' ' read -r -a commit_array <<< "$commits_after_compile"
+            for commit in "${commit_array[@]}"; do
               echo "Re-applying commit: $commit"
               git cherry-pick $commit || git cherry-pick --abort
               git add .
