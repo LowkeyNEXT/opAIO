@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repo without symlinks
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Ensure you fetch all history for commits, tags, etc
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Setup Git Config
@@ -35,7 +35,6 @@ jobs:
       - name: Find compile commit
         id: find-compile-commit
         run: |
-          # Find the commit hash for the "Compile FrogPilot" commit
           compile_commit=$(git log --oneline --first-parent --grep "Compile FrogPilot" | head -n 1 | cut -d " " -f 1)
           if [ -z "$compile_commit" ]; then
             echo "Error: Compile commit not found."
@@ -47,46 +46,41 @@ jobs:
         id: commits-after-compile
         run: |
           compile_commit=${{ env.compile_commit }}
-          # List all commits after the compile commit
-          commits_after_compile=$(git rev-list $compile_commit..HEAD | tail -n +2 | tac)
-          # Use a safe delimiter to separate commits
-          commits_after_compile=$(echo $commits_after_compile | tr '\n' '|')
-          echo "commits_after_compile=$commits_after_compile" >> $GITHUB_ENV
+          commits_after_compile=$(git rev-list $compile_commit..HEAD | tail -n +2)
+          if [ -z "$commits_after_compile" ]; then
+            echo "No commits after compile commit."
+            exit 1
+          fi
+          echo "commits_after_compile=$(echo $commits_after_compile | tr '\n' ' ')" >> $GITHUB_ENV
 
       - name: Revert commits after compile commit
         run: |
           compile_commit=${{ env.compile_commit }}
           commits_after_compile=${{ env.commits_after_compile }}
           
-          # Revert all commits after the compile commit
           if [ ! -z "$commits_after_compile" ]; then
-            IFS='|' read -r -a commit_array <<< "$commits_after_compile"
+            IFS=' ' read -r -a commit_array <<< "$commits_after_compile"
             for commit in "${commit_array[@]}"; do
               echo "Reverting commit: $commit"
               git revert --no-edit $commit || git revert --abort
               git add .
-              git commit -m "Revert commit: $commit"
+              git commit --allow-empty -m "Revert commit: $commit"
             done
           fi
 
       - name: Revert the compile commit
         run: |
           compile_commit=${{ env.compile_commit }}
-          if [ ! -z "$compile_commit" ]; then
-            git revert --no-edit $compile_commit
-            git add .
-            git commit -m "Revert compile commit: $compile_commit"
-          else
-            echo "No compile commit to revert."
-          fi
+          git revert --no-edit $compile_commit
+          git add .
+          git commit --allow-empty -m "Revert compile commit: $compile_commit"
 
       - name: Re-apply commits after compile commit
         run: |
           commits_after_compile=${{ env.commits_after_compile }}
           
-          # Re-apply all commits that were reverted in the first step
           if [ ! -z "$commits_after_compile" ]; then
-            IFS='|' read -r -a commit_array <<< "$commits_after_compile"
+            IFS=' ' read -r -a commit_array <<< "$commits_after_compile"
             for commit in "${commit_array[@]}"; do
               echo "Re-applying commit: $commit"
               git cherry-pick $commit || git cherry-pick --abort
@@ -95,7 +89,7 @@ jobs:
             done
           fi
 
-      - name: Cherry-pick commits
+      - name: Cherry-pick additional commits
         run: |
           cherry_picks=(
             9827d344088aa94657fbf878f605d3066314ac39
