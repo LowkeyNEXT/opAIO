@@ -25,10 +25,10 @@ jobs:
           git config --global user.email "55640145+BRid37@users.noreply.github.com"
           git config --global user.name "BRid37"
 
-      - name: Ensure clean state
+      - name: Ensure clean state and fetch all branches
         run: |
-          git checkout -b temp-branch
-          git fetch origin fp-FrogPilot-Staging
+          git fetch --all
+          git checkout -b temp-branch origin/fp-FrogPilot-Staging
           git reset --hard origin/fp-FrogPilot-Staging
           git clean -fdx
 
@@ -36,7 +36,7 @@ jobs:
         id: find-compile-commit
         run: |
           # Find the commit hash for the "Compile FrogPilot" commit
-          compile_commit=$(git log --oneline --first-parent --grep "Compile FrogPilot" fp-FrogPilot-Staging | head -n 1 | cut -d " " -f 1)
+          compile_commit=$(git log --oneline --first-parent --grep "Compile FrogPilot" | head -n 1 | cut -d " " -f 1)
           if [ -z "$compile_commit" ]; then
             echo "Error: Compile commit not found."
             exit 1
