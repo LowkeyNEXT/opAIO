@@ -27,7 +27,7 @@ jobs:
 
       - name: Ensure clean state
         run: |
-          git checkout fp-FrogPilot-Staging
+          git checkout -b temp-branch
           git fetch origin fp-FrogPilot-Staging
           git reset --hard origin/fp-FrogPilot-Staging
           git clean -fdx
@@ -37,7 +37,6 @@ jobs:
         run: |
           # Find the commit hash for the "Compile FrogPilot" commit
           compile_commit=$(git log --oneline --first-parent --grep "Compile FrogPilot" fp-FrogPilot-Staging | head -n 1 | cut -d " " -f 1)
-          echo "Compile commit to revert: $compile_commit"
           echo "compile_commit=$compile_commit" >> $GITHUB_ENV
 
       - name: Get all commits after the compile commit
@@ -57,7 +56,7 @@ jobs:
           if [ ! -z "$commits_after_compile" ]; then
             for commit in $commits_after_compile; do
               echo "Reverting commit: $commit"
-              git revert --no-commit $commit || git revert --abort
+              git revert --no-edit $commit || git revert --abort
               git add .
               git commit -m "Revert commit: $commit"
             done
@@ -101,5 +100,6 @@ jobs:
 
       - name: Push changes
         run: |
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git checkout fp-FrogPilot-Staging
+          git merge temp-branch
           git push origin fp-FrogPilot-Staging
