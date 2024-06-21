@@ -59,7 +59,7 @@ jobs:
           commit_count=${{ env.commit_count }}
           for i in $(seq 0 $((commit_count - 1))); do
             commit_var="commit_$i"
-            commit=${{ env[$commit_var] }}
+            commit=${{ env[commit_var] }}
             echo "Reverting commit: $commit"
             git revert --no-edit $commit || git revert --abort
             git add .
@@ -78,7 +78,7 @@ jobs:
           commit_count=${{ env.commit_count }}
           for i in $(seq 0 $((commit_count - 1))); do
             commit_var="commit_$i"
-            commit=${{ env[$commit_var] }}
+            commit=${{ env[commit_var] }}
             echo "Re-applying commit: $commit"
             git cherry-pick $commit || git cherry-pick --abort
             git add .
