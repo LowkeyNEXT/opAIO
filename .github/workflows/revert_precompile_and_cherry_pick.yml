@@ -47,21 +47,15 @@ jobs:
         run: |
           compile_commit=${{ env.compile_commit }}
           commits_after_compile=$(git rev-list $compile_commit..HEAD | tail -n +2 | tac)
-          commit_count=0
-          while read -r commit; do
-            echo "commit_$commit_count=$commit" >> $GITHUB_ENV
-            commit_count=$((commit_count + 1))
-          done <<< "$commits_after_compile"
-          echo "commit_count=$commit_count" >> $GITHUB_ENV
+          echo "::set-output name=commits::$commits_after_compile"
 
       - name: Revert commits after compile commit
         run: |
-          commit_count=${{ env.commit_count }}
-          for i in $(seq 0 $((commit_count - 1))); do
-            commit_var="commit_$i"
-            commit=${{ env[commit_var] }}
+          commits_after_compile="${{ steps.commits-after-compile.outputs.commits }}"
+          IFS=$'\n' read -rd '' -a commit_array <<<"$commits_after_compile"
+          for commit in "${commit_array[@]}"; do
             echo "Reverting commit: $commit"
-            git revert --no-edit $commit || git revert --abort
+            git revert --no-edit $commit || { git revert --abort; exit 1; }
             git add .
             git commit --allow-empty -m "Revert commit: $commit"
           done
@@ -69,18 +63,17 @@ jobs:
       - name: Revert the compile commit
         run: |
           compile_commit=${{ env.compile_commit }}
-          git revert --no-edit $compile_commit || git revert --abort
+          git revert --no-edit $compile_commit || { git revert --abort; exit 1; }
           git add .
           git commit --allow-empty -m "Revert compile commit: $compile_commit"
 
       - name: Re-apply commits after compile commit
         run: |
-          commit_count=${{ env.commit_count }}
-          for i in $(seq 0 $((commit_count - 1))); do
-            commit_var="commit_$i"
-            commit=${{ env[commit_var] }}
+          commits_after_compile="${{ steps.commits-after-compile.outputs.commits }}"
+          IFS=$'\n' read -rd '' -a commit_array <<<"$commits_after_compile"
+          for commit in "${commit_array[@]}"; do
             echo "Re-applying commit: $commit"
-            git cherry-pick $commit || git cherry-pick --abort
+            git cherry-pick $commit || { git cherry-pick --abort; exit 1; }
             git add .
             git commit --allow-empty -m "Re-apply commit: $commit"
           done
@@ -95,7 +88,7 @@ jobs:
             b3985e337ad68434373b06271eaf3851fe6a53b4
           )
           for commit in "${cherry_picks[@]}"; do
-            git cherry-pick $commit || git cherry-pick --abort
+            git cherry-pick $commit || { git cherry-pick --abort; exit 1; }
             git add .
             git commit --allow-empty -m "Cherry-pick commit: $commit"
           done
