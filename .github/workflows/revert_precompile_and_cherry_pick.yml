@@ -37,6 +37,10 @@ jobs:
         run: |
           # Find the commit hash for the "Compile FrogPilot" commit
           compile_commit=$(git log --oneline --first-parent --grep "Compile FrogPilot" fp-FrogPilot-Staging | head -n 1 | cut -d " " -f 1)
+          if [ -z "$compile_commit" ]; then
+            echo "Error: Compile commit not found."
+            exit 1
+          fi
           echo "compile_commit=$compile_commit" >> $GITHUB_ENV
 
       - name: Get all commits after the compile commit
@@ -65,9 +69,13 @@ jobs:
       - name: Revert the compile commit
         run: |
           compile_commit=${{ env.compile_commit }}
-          git revert --no-edit $compile_commit
-          git add .
-          git commit -m "Revert compile commit: $compile_commit"
+          if [ ! -z "$compile_commit" ]; then
+            git revert --no-edit $compile_commit
+            git add .
+            git commit -m "Revert compile commit: $compile_commit"
+          else
+            echo "No compile commit to revert."
+          fi
 
       - name: Re-apply commits after compile commit
         run: |
