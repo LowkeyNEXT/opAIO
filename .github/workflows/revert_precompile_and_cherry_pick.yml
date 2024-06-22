@@ -106,8 +106,8 @@ jobs:
           done
 
       - name: Push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git checkout fp-FrogPilot-Staging
-          git merge temp-branch
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git push origin fp-FrogPilot-Staging
+          git push origin temp-branch:fp-FrogPilot-Staging --force
