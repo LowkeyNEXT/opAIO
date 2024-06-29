@@ -1,0 +1,22 @@
+name: Sync hp-Hpilot-devel2-BANNABLE
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hp-Hpilot-devel2-BANNABLE
+          persist-credentials: false
+      - name: Sync with Remote Repo
+        uses: repo-sync/github-sync@v2.3.0
+        with:
+          source_repo: "https://github.com/CHaucke89/Hpilot.git"
+          source_branch: "Hpilot-devel2"
+          destination_branch: "hp-Hpilot-devel2-BANNABLE"
+          github_token: ${{ secrets.PAT }}
