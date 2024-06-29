@@ -1,0 +1,123 @@
+name: Revert Commit After Sync V2
+
+on:
+  workflow_run:
+    workflows: ["Sync FrogPilot-Staging"]
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  workflows: write
+
+jobs:
+  revert-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure Git to skip symlinks
+        run: git config --global core.symlinks false
+
+      - name: Checkout repo without symlinks
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Git Config
+        run: |
+          git config --global user.email "55640145+BRid37@users.noreply.github.com"
+          git config --global user.name "BRid37"
+
+      - name: Ensure clean state and fetch all branches
+        run: |
+          git fetch --all
+          git checkout -b temp-branch origin/fp-FrogPilot-Staging
+          git reset --hard origin/fp-FrogPilot-Staging
+          git clean -fdx
+
+      - name: Exclude workflow file from operations
+        run: git update-index --assume-unchanged .github/workflows/auto-cache/action.yaml
+
+      - name: Find compile commit
+        id: find-compile-commit
+        run: |
+          compile_commit=$(git log --oneline --first-parent --grep "Compile FrogPilot" | head -n 1 | cut -d " " -f 1)
+          if [ -z "$compile_commit" ]; then
+            echo "Error: Compile commit not found."
+            exit 1
+          fi
+          echo "compile_commit=$compile_commit" >> $GITHUB_ENV
+          echo "compile_commit=$compile_commit" >> $GITHUB_OUTPUT
+
+      - name: Get all commits after the compile commit
+        id: commits-after-compile
+        run: |
+          compile_commit=${{ env.compile_commit }}
+          commits_after_compile=$(git rev-list $compile_commit..HEAD | tail -n +2 | tac)
+          echo "commits<<EOF" >> $GITHUB_OUTPUT
+          echo "$commits_after_compile" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Revert commits after compile commit
+        run: |
+          commits_after_compile="${{ steps.commits-after-compile.outputs.commits }}"
+          IFS=$'\n' read -r -a commit_array <<< "$commits_after_compile"
+          for commit in "${commit_array[@]}"; do
+            echo "Reverting commit: $commit"
+            git revert --no-edit $commit || { 
+              echo "Conflict detected while reverting $commit.";
+              git revert --abort; 
+              exit 1; 
+            }
+            git add . ':!.github/workflows/auto-cache/action.yaml'
+            git commit --allow-empty -m "Revert commit: $commit"
+          done
+
+      - name: Revert the compile commit
+        run: |
+          compile_commit=${{ env.compile_commit }}
+          git revert --no-edit $compile_commit || {
+            echo "Conflict detected while reverting $compile_commit.";
+            git revert --abort;
+            exit 1;
+          }
+          git add . ':!.github/workflows/auto-cache/action.yaml'
+          git commit --allow-empty -m "Revert compile commit: $compile_commit"
+
+      - name: Re-apply commits after compile commit
+        run: |
+          commits_after_compile="${{ steps.commits-after-compile.outputs.commits }}"
+          IFS=$'\n' read -r -a commit_array <<< "$commits_after_compile"
+          for commit in "${commit_array[@]}"; do
+            echo "Re-applying commit: $commit"
+            git cherry-pick --strategy=recursive -X theirs $commit || {
+              echo "Conflict detected while cherry-picking $commit. Resolving using incoming changes."
+              git add -u ':!.github/workflows/auto-cache/action.yaml'
+              git cherry-pick --continue || git cherry-pick --abort
+            }
+          done
+
+      - name: Cherry-pick additional commits
+        run: |
+          cherry_picks=(
+            9827d344088aa94657fbf878f605d3066314ac39
+            46cecf31253fe5a573c83c09cad5cfd05609f05e
+            88aad794038e1d37cf36c1982c8c69d960c19f85
+            36000fe61f27231b143ceb37cbafdf563814fbc5
+            b3985e337ad68434373b06271eaf3851fe6a53b4
+          )
+          for commit in "${cherry_picks[@]}"; do
+            git cherry-pick --strategy=recursive -X theirs $commit || {
+              echo "Conflict detected while cherry-picking $commit. Resolving using incoming changes."
+              git add -u ':!.github/workflows/auto-cache/action.yaml'
+              git cherry-pick --continue || git cherry-pick --abort
+            }
+          done
+
+      - name: Push changes
+        env:
+          PAT: ${{ secrets.PAT }}
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
+          git push origin temp-branch:fp-FrogPilot-Staging --force
