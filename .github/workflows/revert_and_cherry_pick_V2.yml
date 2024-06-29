@@ -1,4 +1,4 @@
-name: Revert Commit After Sync V2
+name: Revert Commit After Sync
 
 on:
   workflow_run:
@@ -36,8 +36,14 @@ jobs:
           git reset --hard origin/fp-FrogPilot-Staging
           git clean -fdx
 
-      - name: Exclude workflow file from operations
-        run: git update-index --assume-unchanged .github/workflows/auto-cache/action.yaml
+      - name: Exclude workflow file from operations if it exists
+        run: |
+          if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
+            git update-index --assume-unchanged .github/workflows/auto-cache/action.yaml
+            echo "Excluded .github/workflows/auto-cache/action.yaml from git operations."
+          else
+            echo "File .github/workflows/auto-cache/action.yaml does not exist. Skipping exclusion."
+          fi
 
       - name: Find compile commit
         id: find-compile-commit
@@ -70,7 +76,11 @@ jobs:
               git revert --abort; 
               exit 1; 
             }
-            git add . ':!.github/workflows/auto-cache/action.yaml'
+            if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
+              git add . ':!.github/workflows/auto-cache/action.yaml'
+            else
+              git add .
+            fi
             git commit --allow-empty -m "Revert commit: $commit"
           done
 
@@ -82,7 +92,11 @@ jobs:
             git revert --abort;
             exit 1;
           }
-          git add . ':!.github/workflows/auto-cache/action.yaml'
+          if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
+            git add . ':!.github/workflows/auto-cache/action.yaml'
+          else
+            git add .
+          fi
           git commit --allow-empty -m "Revert compile commit: $compile_commit"
 
       - name: Re-apply commits after compile commit
@@ -93,7 +107,11 @@ jobs:
             echo "Re-applying commit: $commit"
             git cherry-pick --strategy=recursive -X theirs $commit || {
               echo "Conflict detected while cherry-picking $commit. Resolving using incoming changes."
-              git add -u ':!.github/workflows/auto-cache/action.yaml'
+              if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
+                git add -u ':!.github/workflows/auto-cache/action.yaml'
+              else
+                git add -u
+              fi
               git cherry-pick --continue || git cherry-pick --abort
             }
           done
@@ -110,7 +128,11 @@ jobs:
           for commit in "${cherry_picks[@]}"; do
             git cherry-pick --strategy=recursive -X theirs $commit || {
               echo "Conflict detected while cherry-picking $commit. Resolving using incoming changes."
-              git add -u ':!.github/workflows/auto-cache/action.yaml'
+              if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
+                git add -u ':!.github/workflows/auto-cache/action.yaml'
+              else
+                git add -u
+              fi
               git cherry-pick --continue || git cherry-pick --abort
             }
           done
