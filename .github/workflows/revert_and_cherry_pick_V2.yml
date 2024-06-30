@@ -116,6 +116,7 @@ jobs:
             }
           done
 
+     
       - name: Cherry-pick additional commits
         run: |
           cherry_picks=(
@@ -125,17 +126,25 @@ jobs:
             36000fe61f27231b143ceb37cbafdf563814fbc5
             b3985e337ad68434373b06271eaf3851fe6a53b4
           )
+          failed_cherry_picks=()
           for commit in "${cherry_picks[@]}"; do
-            git cherry-pick --strategy=recursive -X theirs $commit || {
-              echo "Conflict detected while cherry-picking $commit. Resolving using incoming changes."
-              if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
-                git add -u ':!.github/workflows/auto-cache/action.yaml'
-              else
-                git add -u
-              fi
-              git cherry-pick --continue || git cherry-pick --abort
-            }
+            if ! git cherry-pick $commit; then
+              echo "Failed to cherry-pick commit: $commit"
+              git cherry-pick --abort
+              failed_cherry_picks+=("$commit")
+            else
+              echo "Successfully cherry-picked commit: $commit"
+            fi
           done
+          
+          if [ ${#failed_cherry_picks[@]} -ne 0 ]; then
+            echo "The following cherry-picks failed:"
+            printf '%s\n' "${failed_cherry_picks[@]}"
+            echo "Please review these commits manually."
+          else
+            echo "All cherry-picks were successful."
+          fi
+
 
       - name: Push changes
         env:
