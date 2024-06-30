@@ -1,8 +1,8 @@
-name: Revert Commit After Sync
+name: Decompile and Cherry Pick
 
 on:
   workflow_run:
-    workflows: ["Sync FrogPilot-Staging"]
+    workflows: ["Sync b-BPilot-BANNABLE"]
     types:
       - completed
   workflow_dispatch:
