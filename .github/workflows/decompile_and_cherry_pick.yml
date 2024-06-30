@@ -100,12 +100,10 @@ jobs:
             echo "Commit message: $commit_message"
             if git revert --no-edit $commit; then 
               echo "Successfully reverted commit: $commit"
+              # Remove the file from git tracking if it exists
               if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
-                git add . ':!.github/workflows/auto-cache/action.yaml'
-              else
-                git add .
+                git update-index --assume-unchanged .github/workflows/auto-cache/action.yaml
               fi
-              git commit -m "Revert commit: $commit"
             else
               echo "Failed to revert commit: $commit"
               echo "Aborting revert and exiting."
@@ -114,6 +112,10 @@ jobs:
             fi
             echo "---"
           done
+          
+          # Check the status after all reverts
+          git status
+          echo "All reverts completed successfully."
 
       - name: Revert the compile commit
         run: |
@@ -121,16 +123,18 @@ jobs:
           echo "Attempting to revert compile commit: $compile_commit"
           if git revert --no-edit $compile_commit; then
             echo "Successfully reverted compile commit: $compile_commit"
+            # Remove the file from git tracking if it exists
             if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
-              git add . ':!.github/workflows/auto-cache/action.yaml'
-            else
-              git add .
+              git update-index --assume-unchanged .github/workflows/auto-cache/action.yaml
             fi
-            git diff --staged --quiet || git commit -m "Revert compile commit: $compile_commit"
           else
-            echo "No changes to revert in compile commit: $compile_commit"
+            echo "Failed to revert compile commit: $compile_commit"
             git revert --abort
           fi
+          
+          # Check the status after the revert
+          git status
+          echo "Compile commit revert completed."
 
       - name: Re-apply commits after compile commit
         run: |
