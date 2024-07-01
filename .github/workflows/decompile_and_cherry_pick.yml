@@ -32,8 +32,8 @@ jobs:
       - name: Ensure clean state and fetch all branches
         run: |
           git fetch --all
-          git checkout -b temp-branch origin/fp-FrogPilot-Staging
-          git reset --hard origin/fp-FrogPilot-Staging
+          git checkout -b temp-branch origin/bp-BPilot-BANNABLE
+          git reset --hard origin/bp-BPilot-BANNABLE
           git clean -fdx
 
       - name: Exclude workflow file from operations if it exists
@@ -203,5 +203,5 @@ jobs:
         run: |
           echo "Pushing changes to remote repository"
           git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
-          git push origin temp-branch:fp-FrogPilot-Staging --force
+          git push origin temp-branch:bp-BPilot-BANNABLE --force
           echo "Push completed"
