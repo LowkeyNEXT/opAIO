@@ -2,7 +2,7 @@ name: Decompile and Cherry Pick
 
 on:
   workflow_run:
-    workflows: ["Sync b-BPilot-BANNABLE"]
+    workflows: ["Sync bp-BPilot-BANNABLE"]
     types:
       - completed
   workflow_dispatch:
