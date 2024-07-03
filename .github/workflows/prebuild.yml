@@ -20,6 +20,8 @@ jobs:
       checks: read
       contents: read
       packages: write
+      actions: read
+      metadata: read
     steps:
       - name: Wait for green check mark
         if: ${{ github.event_name != 'workflow_dispatch' }}
@@ -35,9 +37,6 @@ jobs:
         with:
           submodules: true
           ref: bp-BPilot-BANNABLE
-          lfs: true
-      - name: Pull LFS objects
-        run: git lfs pull
       - name: Build and Push docker image
         run: |
           $DOCKER_LOGIN
