@@ -172,9 +172,9 @@ jobs:
             1979871b5712f608f333c456c2ca07caf22ee11e #Faster Auto Tune
             4892a95a590eb170c6cc9dec0724b859969b774c #NNFF-Lite
             017ce5fea371b569ab1fb3ca169087246dade7d2 #Startup Message
-            0a84f28d47a526503363bc277ee29569adb7a96b #Stock Icons
-            089ba5052f5e749784cc54a8dc158a7bc3225b21 #Fast Boot
-            069773bf9b6837fdebe31dbc5fc1a988997c2d10 #Sentry
+            20f1d0ee9a10692ac2b024c4b908ffb807f434a1 #Stock Icons
+            0e35d65cda1aa32fb2451f8557773279d9f65e85 #Fast Boot
+            85a5a06b67ba80007d79f75044bc4badc758bbd6 #Sentry
           )
           failed_cherry_picks=()
           for commit in "${cherry_picks[@]}"; do
