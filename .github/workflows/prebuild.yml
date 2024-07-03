@@ -30,11 +30,14 @@ jobs:
           running-workflow-name: 'build prebuilt'
           repo-token: ${{ secrets.PAT }}
           check-regexp: ^((?!.*(build master-ci).*).)*$
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           submodules: true
           ref: bp-BPilot-BANNABLE
-      - run: git lfs pull
+          lfs: true
+      - name: Pull LFS objects
+        run: git lfs pull
       - name: Build and Push docker image
         run: |
           $DOCKER_LOGIN
