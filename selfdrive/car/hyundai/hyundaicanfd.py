@@ -41,7 +41,7 @@ def create_steering_messages(packer, CP, CAN, enabled, lat_active, apply_steer):
 
   values = {
     "LKA_MODE": 2,
-    "LKA_ICON": 2 if enabled else 1 if lat_active else 0,  # HDA2
+    "LKA_ICON": 2 if enabled else 2 if lat_active else 1,  # HDA2 Green Steer Icon if AOL or OP Engaged and grey if no steering is active
     "TORQUE_REQUEST": apply_steer,
     "LKA_ASSIST": 0,
     "STEER_REQ": 1 if lat_active else 0,
@@ -116,7 +116,7 @@ def create_acc_cancel(packer, CP, CAN, cruise_info_copy):
 def create_lfahda_cluster(packer, CAN, enabled, lat_active):
   values = {
     "HDA_ICON": 1 if enabled else 0,
-    "LFA_ICON": 2 if enabled else 1 if lat_active else 0,  # HDA1
+    "LFA_ICON": 2 if enabled else 2 if lat_active else 1,  # HDA1
   }
   return packer.make_can_msg("LFAHDA_CLUSTER", CAN.ECAN, values)
 
@@ -132,7 +132,7 @@ def create_acc_control(packer, CAN, enabled, accel_last, accel, stopping, gas_ov
 
   values = {
     "ACCMode": 0 if not enabled else (2 if gas_override else 1),
-    "MainMode_ACC": 1,
+    "MainMode_ACC": 0 if not enabled else 1, #Hide CC on dash if not active
     "StopReq": 1 if stopping else 0,
     "aReqValue": a_val,
     "aReqRaw": a_raw,
@@ -184,7 +184,7 @@ def create_adrv_messages(packer, CAN, frame):
 
   if frame % 2 == 0:
     values = {
-      'AEB_SETTING': 0x1,  # show AEB disabled icon
+      'AEB_SETTING': 0x0,  # Don't show AEB disabled icon
       'SET_ME_2': 0x2,
       'SET_ME_FF': 0xff,
       'SET_ME_FC': 0xfc,
