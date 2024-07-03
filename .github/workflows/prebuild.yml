@@ -6,7 +6,6 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_LOGIN: docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.PAT }}
   BUILD: selfdrive/test/docker_build.sh prebuilt
 
 jobs:
@@ -20,6 +19,7 @@ jobs:
       checks: read
       contents: read
       packages: write
+      actions: read
     steps:
       - name: Wait for green check mark
         if: ${{ github.event_name != 'workflow_dispatch' }}
@@ -35,7 +35,21 @@ jobs:
         with:
           submodules: true
           ref: bp-BPilot-BANNABLE
+      - name: Login to GitHub Container Registry
+        run: |
+          echo "${{ secrets.PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Debug - List directory contents
+        run: |
+          ls -la
+          ls -la selfdrive/test
+      - name: Debug - Check SCons installation
+        run: |
+          scons --version
       - name: Build and Push docker image
         run: |
-          $DOCKER_LOGIN
-          eval "$BUILD"
+          set -x  # Enable command echoing for debugging
+          $BUILD
+      - name: Debug - Print Docker build logs
+        if: failure()
+        run: |
+          cat /tmp/build.log || true
