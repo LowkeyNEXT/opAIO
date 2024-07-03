@@ -20,8 +20,6 @@ jobs:
       checks: read
       contents: read
       packages: write
-      actions: read
-      metadata: read
     steps:
       - name: Wait for green check mark
         if: ${{ github.event_name != 'workflow_dispatch' }}
