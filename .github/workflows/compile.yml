@@ -32,13 +32,14 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y gcc g++ cmake make git libdbus-1-dev libboost-all-dev libusb-1.0-0-dev libsodium-dev libcapnp-dev libzmq3-dev libcurl4-openssl-dev clang
+        python -m pip install --upgrade pip
+        pip install numpy scons
         if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
-        pip install scons
+        if [ -f "openpilot/requirements.txt" ]; then pip install -r openpilot/requirements.txt; fi
 
     - name: Build opAIO
       run: |
         scons -j$(nproc)
-
 
     - name: Commit and push compiled files
       run: |
