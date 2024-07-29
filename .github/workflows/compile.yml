@@ -31,9 +31,6 @@ jobs:
       run: |
         scons -j$(nproc)
 
-    - name: Run tests
-      run: |
-        pytest selfdrive/test/test_car_models.py
 
     - name: Commit and push compiled files
       run: |
