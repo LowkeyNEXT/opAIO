@@ -5,6 +5,7 @@ on:
     branches: [ bp-BPilot-BANNABLE ]
   pull_request:
     branches: [ bp-BPilot-BANNABLE ]
+  workflow_dispatch:
 
 jobs:
   build:
