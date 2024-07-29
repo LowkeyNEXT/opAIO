@@ -1,4 +1,4 @@
-name: Compile opAIO Fork
+name: Compile and Push BRid37 opAIO Fork
 
 on:
   push:
@@ -6,13 +6,18 @@ on:
   pull_request:
     branches: [ bp-BPilot-BANNABLE ]
   workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual run'
+        required: false
+        default: 'Manual trigger'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v2
       with:
         repository: BRid37/opAIO
         ref: bp-BPilot-BANNABLE
@@ -27,6 +32,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y gcc g++ cmake make git libdbus-1-dev libboost-all-dev libusb-1.0-0-dev libsodium-dev libcapnp-dev libzmq3-dev libcurl4-openssl-dev clang
+        if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
+        pip install scons
 
     - name: Build opAIO
       run: |
