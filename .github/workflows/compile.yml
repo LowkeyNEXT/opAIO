@@ -1,0 +1,50 @@
+name: Compile opAIO Fork
+
+on:
+  push:
+    branches: [ bp-BPilot-BANNABLE ]
+  pull_request:
+    branches: [ bp-BPilot-BANNABLE ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: BRid37/opAIO
+        ref: bp-BPilot-BANNABLE
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc g++ cmake make git libdbus-1-dev libboost-all-dev libusb-1.0-0-dev libsodium-dev libcapnp-dev libzmq3-dev libcurl4-openssl-dev clang
+
+    - name: Build opAIO
+      run: |
+        scons -j$(nproc)
+
+    - name: Run tests
+      run: |
+        pytest selfdrive/test/test_car_models.py
+
+    - name: Commit and push compiled files
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git commit -m "Add compiled version [skip ci]" || echo "No changes to commit"
+        git push
+
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
