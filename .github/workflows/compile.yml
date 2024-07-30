@@ -89,15 +89,17 @@ jobs:
       run: |
         curl -sSL https://install.python-poetry.org | python3 -
         echo 'export PATH="$HOME/.local/bin:$PATH"' >> $GITHUB_ENV
+
+    - name: Verify Poetry installation
+      run: |
         source $GITHUB_ENV
         poetry --version
 
     - name: Install Python dependencies
       run: |
+        source $GITHUB_ENV
         poetry env use python3
         poetry install --no-root
-      env:
-        PATH: ${{ env.PATH }}
 
     - name: Build opAIO
       run: scons -j$(nproc)
