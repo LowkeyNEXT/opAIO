@@ -91,7 +91,8 @@ jobs:
           export PATH=\"/root/.local/bin:\$PATH\"
 
           # Download and extract ffmpeg binaries
-          curl -sSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz | tar -xJf - --strip-components=1 -C /usr/local/bin/ --wildcards '*/ffmpeg' '*/ffprobe' '*/libav*' '*/libsw*' '*/libpostproc*'
+          curl -sSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz | tar -xJ --strip-components=1 -C /usr/local/bin/ --wildcards '*/ffmpeg' '*/ffprobe'
+          curl -sSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz | tar -xJ --strip-components=1 -C /usr/local/lib/ --wildcards '*/libav*' '*/libsw*' '*/libpostproc*'
 
           export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
           export COMMA_HOME=\$HOME/.comma
