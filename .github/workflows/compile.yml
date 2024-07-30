@@ -33,7 +33,7 @@ jobs:
           set -e
           apt-get update
           apt-get install -y software-properties-common
-          add-apt-repository ppa:savoury1/ffmpeg4
+          add-apt-repository ppa:deadsnakes/ppa
           apt-get update
           apt-get install -y \
             ca-certificates \
@@ -48,12 +48,6 @@ jobs:
             libcurl4-openssl-dev \
             git \
             git-lfs \
-            ffmpeg=7:4.4.2-0ubuntu0.1 \
-            libavformat-dev=7:4.4.2-0ubuntu0.1 \
-            libavcodec-dev=7:4.4.2-0ubuntu0.1 \
-            libavdevice-dev=7:4.4.2-0ubuntu0.1 \
-            libavutil-dev=7:4.4.2-0ubuntu0.1 \
-            libavfilter-dev=7:4.4.2-0ubuntu0.1 \
             libbz2-dev \
             libeigen3-dev \
             libffi-dev \
@@ -92,6 +86,8 @@ jobs:
             python3-smbus \
             libsodium-dev
 
+          curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz | tar xJf - -C /usr/local/bin --strip-components=1 --wildcards '*/ffmpeg' '*/ffprobe' '*/ffmpeg-4.4.2'
+          
           curl -sSL https://install.python-poetry.org | python3.11 -
           export PATH=\"/root/.local/bin:\$PATH\"
 
