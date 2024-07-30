@@ -95,6 +95,7 @@ jobs:
 
     - name: Configure Poetry and install dependencies
       run: |
+        export PATH="$HOME/.local/bin:$PATH"
         poetry env use python3.11
         poetry install --no-root
         poetry run pip install scons
@@ -118,6 +119,7 @@ jobs:
 
     - name: Build opAIO
       run: |
+        source $HOME/.poetry/env
         export COMMA_HOME=$HOME/.comma
         export PARAMS_PATH=$HOME/.comma/params
         export FROGPILOT_HOME=$HOME/.frogpilot
