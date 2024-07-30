@@ -17,6 +17,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: BRid37/opAIO
+        ref: bp-BPilot-BANNABLE
+        fetch-depth: 0
+
     - name: Set up Docker and Install Dependencies
       run: |
         docker run --rm \
@@ -83,8 +89,7 @@ jobs:
             libsodium-dev
 
           curl -sSL https://install.python-poetry.org | python3 -
-          echo 'export PATH=\"/root/.local/bin:$PATH\"' >> /root/.bashrc
-          source /root/.bashrc
+          export PATH=\"/root/.local/bin:\$PATH\"
 
           export COMMA_HOME=\$HOME/.comma
           export PARAMS_PATH=\$HOME/.comma/params
@@ -96,9 +101,9 @@ jobs:
           mkdir -p \$HOME/.local/share
           mkdir -p \$HOME/.cargo/bin
 
-          poetry env use python3
-          poetry install --no-root
-          poetry run scons -j\$(nproc)
+          /root/.local/bin/poetry env use python3
+          /root/.local/bin/poetry install --no-root
+          /root/.local/bin/poetry run scons -j\$(nproc)
           "
 
     - name: Commit and push compiled files
