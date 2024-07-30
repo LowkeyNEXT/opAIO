@@ -102,11 +102,11 @@ jobs:
 
     - name: Set environment variables and create necessary directories
       run: |
-        echo 'export COMMA_HOME=$HOME/.comma' >> $GITHUB_ENV
-        echo 'export PARAMS_PATH=$COMMA_HOME/params' >> $GITHUB_ENV
-        echo 'export FROGPILOT_HOME=$HOME/.frogpilot' >> $GITHUB_ENV
-        mkdir -p $COMMA_HOME/params
-        mkdir -p $FROGPILOT_HOME
+        echo 'COMMA_HOME=$HOME/.comma' >> $GITHUB_ENV
+        echo 'PARAMS_PATH=$HOME/.comma/params' >> $GITHUB_ENV
+        echo 'FROGPILOT_HOME=$HOME/.frogpilot' >> $GITHUB_ENV
+        mkdir -p $HOME/.comma/params
+        mkdir -p $HOME/.frogpilot
         mkdir -p $HOME/.cache
         mkdir -p $HOME/.config
         mkdir -p $HOME/.local/share
