@@ -38,7 +38,8 @@ jobs:
           libqt5core5a libqt5gui5 libqt5widgets5 qttools5-dev qttools5-dev-tools \
           libglew-dev libglfw3-dev libglm-dev libopencv-dev python3-opencv \
           libeigen3-dev libpcap-dev \
-          python3-dev python3-pip python3-setuptools
+          python3-dev python3-pip python3-setuptools \
+          gcc-arm-none-eabi
 
         python -m pip install --upgrade pip
         pip install numpy scons pycryptodome
