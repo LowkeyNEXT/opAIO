@@ -28,7 +28,7 @@ jobs:
         docker run --rm \
           -v ${{ github.workspace }}:/workspace \
           -w /workspace \
-          ubuntu:latest \
+          ubuntu:20.04 \
           bash -c "
           set -e
           apt-get update
@@ -48,12 +48,12 @@ jobs:
             libcurl4-openssl-dev \
             git \
             git-lfs \
-            ffmpeg \
-            libavformat-dev \
-            libavcodec-dev \
-            libavdevice-dev \
-            libavutil-dev \
-            libavfilter-dev \
+            ffmpeg=7:3.4.8-0ubuntu0.2 \
+            libavformat-dev=7:3.4.8-0ubuntu0.2 \
+            libavcodec-dev=7:3.4.8-0ubuntu0.2 \
+            libavdevice-dev=7:3.4.8-0ubuntu0.2 \
+            libavutil-dev=7:3.4.8-0ubuntu0.2 \
+            libavfilter-dev=7:3.4.8-0ubuntu0.2 \
             libbz2-dev \
             libeigen3-dev \
             libffi-dev \
