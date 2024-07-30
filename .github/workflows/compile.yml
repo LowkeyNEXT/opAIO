@@ -116,19 +116,14 @@ jobs:
         mkdir -p $HOME/.cargo/bin
       shell: bash
 
-    - name: Set permissions for created directories
-      run: |
-        sudo chown -R $USER:$USER $HOME/.comma
-        sudo chown -R $USER:$USER $HOME/.frogpilot
-        sudo chown -R $USER:$USER $HOME/.cache
-        sudo chown -R $USER:$USER $HOME/.config
-        sudo chown -R $USER:$USER $HOME/.local/share
-        sudo chown -R $USER:$USER $HOME/.cargo/bin
-      shell: bash
-
     - name: Build opAIO
       run: |
+        source $HOME/.poetry/env
+        export COMMA_HOME=$HOME/.comma
+        export PARAMS_PATH=$HOME/.comma/params
+        export FROGPILOT_HOME=$HOME/.frogpilot
         poetry run scons -j$(nproc)
+      shell: bash
 
     - name: Commit and push compiled files
       run: |
