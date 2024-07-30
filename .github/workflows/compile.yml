@@ -105,6 +105,9 @@ jobs:
         echo 'COMMA_HOME=$HOME/.comma' >> $GITHUB_ENV
         echo 'PARAMS_PATH=$HOME/.comma/params' >> $GITHUB_ENV
         echo 'FROGPILOT_HOME=$HOME/.frogpilot' >> $GITHUB_ENV
+        echo 'COMMA_HOME=$HOME/.comma' >> $BASH_ENV
+        echo 'PARAMS_PATH=$HOME/.comma/params' >> $BASH_ENV
+        echo 'FROGPILOT_HOME=$HOME/.frogpilot' >> $BASH_ENV
         mkdir -p $HOME/.comma/params
         mkdir -p $HOME/.frogpilot
         mkdir -p $HOME/.cache
