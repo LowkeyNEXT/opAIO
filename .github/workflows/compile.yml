@@ -85,14 +85,16 @@ jobs:
             python3.11-venv \
             python3.11-dev \
             python3-smbus \
-            libsodium-dev
+            libsodium-dev \
+            xz-utils
 
           curl -sSL https://install.python-poetry.org | python3.11 -
           export PATH=\"/root/.local/bin:\$PATH\"
 
           # Download and extract ffmpeg binaries
-          curl -sSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz | tar -xJ --strip-components=1 -C /usr/local/bin/ --wildcards '*/ffmpeg' '*/ffprobe'
-          curl -sSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz | tar -xJ --strip-components=1 -C /usr/local/lib/ --wildcards '*/libav*' '*/libsw*' '*/libpostproc*'
+          curl -sSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz -o ffmpeg-release-64bit-static.tar.xz
+          tar -xJf ffmpeg-release-64bit-static.tar.xz --strip-components=1 -C /usr/local/bin/ --wildcards '*/ffmpeg' '*/ffprobe'
+          tar -xJf ffmpeg-release-64bit-static.tar.xz --strip-components=1 -C /usr/local/lib/ --wildcards '*/libav*' '*/libsw*' '*/libpostproc*'
 
           export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
           export COMMA_HOME=\$HOME/.comma
