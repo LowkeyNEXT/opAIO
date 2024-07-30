@@ -107,7 +107,7 @@ jobs:
 
           /root/.local/bin/poetry env use python3.11
           /root/.local/bin/poetry install --no-root
-          /root/.local/bin/poetry run scons -j\$(nproc)
+          /root/.local/bin/poetry run scons -j\$(nproc) --with-avformat --with-avcodec --with-avutil --with-swscale
           "
 
     - name: Commit and push compiled files
