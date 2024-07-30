@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Set up Docker
+    - name: Set up Docker and Install Dependencies
       run: |
         docker run --rm \
           -v ${{ github.workspace }}:/workspace \
@@ -83,7 +83,8 @@ jobs:
             libsodium-dev
 
           curl -sSL https://install.python-poetry.org | python3 -
-          echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> /etc/profile.d/poetry.sh
+          echo 'export PATH=\"/root/.local/bin:$PATH\"' >> /root/.bashrc
+          source /root/.bashrc
 
           export COMMA_HOME=\$HOME/.comma
           export PARAMS_PATH=\$HOME/.comma/params
@@ -95,7 +96,6 @@ jobs:
           mkdir -p \$HOME/.local/share
           mkdir -p \$HOME/.cargo/bin
 
-          source \$HOME/.poetry/env
           poetry env use python3
           poetry install --no-root
           poetry run scons -j\$(nproc)
