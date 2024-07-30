@@ -106,12 +106,13 @@ jobs:
         source $GITHUB_ENV
         poetry run pip install scons
 
-    - name: Set COMMA_HOME environment variable
+    - name: Set environment variables
       run: echo 'export COMMA_HOME=$HOME/.comma' >> $GITHUB_ENV
 
     - name: Build opAIO
       run: |
         source $GITHUB_ENV
+        mkdir -p $HOME/.comma/params
         poetry run scons -j$(nproc)
 
     - name: Commit and push compiled files
