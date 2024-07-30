@@ -117,9 +117,17 @@ jobs:
         mkdir -p $HOME/.cargo/bin
       shell: bash
 
+    - name: Verify environment variables
+      run: |
+        echo "COMMA_HOME=$COMMA_HOME"
+        echo "PARAMS_PATH=$PARAMS_PATH"
+        echo "FROGPILOT_HOME=$FROGPILOT_HOME"
+        ls -l $COMMA_HOME
+        ls -l $FROGPILOT_HOME
+      shell: bash
+
     - name: Build opAIO
       run: |
-        source $HOME/.poetry/env
         export COMMA_HOME=$HOME/.comma
         export PARAMS_PATH=$HOME/.comma/params
         export FROGPILOT_HOME=$HOME/.frogpilot
