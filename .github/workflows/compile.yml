@@ -26,7 +26,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
+        python-version: '3.10'
 
     - name: Install system dependencies
       run: |
@@ -101,8 +101,15 @@ jobs:
         poetry env use python3
         poetry install --no-root
 
+    - name: Install SCons
+      run: |
+        source $GITHUB_ENV
+        poetry run pip install scons
+
     - name: Build opAIO
-      run: scons -j$(nproc)
+      run: |
+        source $GITHUB_ENV
+        poetry run scons -j$(nproc)
 
     - name: Commit and push compiled files
       run: |
