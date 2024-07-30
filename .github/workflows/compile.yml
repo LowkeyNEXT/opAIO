@@ -90,7 +90,8 @@ jobs:
           curl -sSL https://install.python-poetry.org | python3.11 -
           export PATH=\"/root/.local/bin:\$PATH\"
 
-          curl -sSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz | tar -xJf - -C /usr/local/bin --strip-components=1 --wildcards '*/ffmpeg' '*/ffprobe'
+          # Download and extract ffmpeg binaries
+          curl -sSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz | tar -xJf - --strip-components=1 -C /usr/local/bin/ --wildcards '*/ffmpeg' '*/ffprobe' '*/libav*' '*/libsw*' '*/libpostproc*'
 
           export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
           export COMMA_HOME=\$HOME/.comma
