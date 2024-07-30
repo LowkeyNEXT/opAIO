@@ -89,7 +89,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         # Include specific versions of required libraries
-        pip install numpy scons pycryptodome cython pycapnp future-fstrings casadi==3.5.6rc2 setproctitle
+        pip install numpy scons pycryptodome cython pycapnp future-fstrings casadi==3.5.6rc2 setproctitle smbus2
         if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
         if [ -f "openpilot/requirements.txt" ]; then pip install -r openpilot/requirements.txt; fi
 
