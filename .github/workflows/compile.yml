@@ -105,9 +105,11 @@ jobs:
           mkdir -p \$HOME/.local/share
           mkdir -p \$HOME/.cargo/bin
 
+          git config --global --add safe.directory /workspace
+
           /root/.local/bin/poetry env use python3.11
           /root/.local/bin/poetry install --no-root
-          /root/.local/bin/poetry run scons -j\$(nproc) --with-avformat --with-avcodec --with-avutil --with-swscale
+          /root/.local/bin/poetry run scons -j\$(nproc)
           "
 
     - name: Commit and push compiled files
