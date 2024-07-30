@@ -28,9 +28,10 @@ jobs:
         docker run --rm \
           -v ${{ github.workspace }}:/workspace \
           -w /workspace \
-          ubuntu:20.04 \
+          ubuntu:22.04 \
           bash -c "
           set -e
+          export DEBIAN_FRONTEND=noninteractive
           apt-get update
           apt-get install -y software-properties-common
           add-apt-repository ppa:deadsnakes/ppa
@@ -85,7 +86,7 @@ jobs:
             python3.11-dev \
             python3-smbus \
             libsodium-dev
-
+          
           curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz | tar xJf - -C /usr/local/bin --strip-components=1 --wildcards '*/ffmpeg' '*/ffprobe' '*/ffmpeg-4.4.2'
           
           curl -sSL https://install.python-poetry.org | python3.11 -
