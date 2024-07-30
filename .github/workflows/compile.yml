@@ -98,13 +98,16 @@ jobs:
     - name: Install Python dependencies
       run: |
         source $GITHUB_ENV
-        poetry env use python3
+        poetry env use python3.11
         poetry install --no-root
 
     - name: Install SCons
       run: |
         source $GITHUB_ENV
         poetry run pip install scons
+
+    - name: Set COMMA_HOME environment variable
+      run: echo 'export COMMA_HOME=$HOME/.comma' >> $GITHUB_ENV
 
     - name: Build opAIO
       run: |
