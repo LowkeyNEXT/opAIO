@@ -28,12 +28,12 @@ jobs:
         docker run --rm \
           -v ${{ github.workspace }}:/workspace \
           -w /workspace \
-          ubuntu:18.04 \
+          ubuntu:20.04 \
           bash -c "
           set -e
           apt-get update
           apt-get install -y software-properties-common
-          add-apt-repository ppa:deadsnakes/ppa
+          add-apt-repository ppa:savoury1/ffmpeg4
           apt-get update
           apt-get install -y \
             ca-certificates \
@@ -48,12 +48,12 @@ jobs:
             libcurl4-openssl-dev \
             git \
             git-lfs \
-            ffmpeg \
-            libavformat-dev \
-            libavcodec-dev \
-            libavdevice-dev \
-            libavutil-dev \
-            libavfilter-dev \
+            ffmpeg=7:4.4.2-0ubuntu0.1 \
+            libavformat-dev=7:4.4.2-0ubuntu0.1 \
+            libavcodec-dev=7:4.4.2-0ubuntu0.1 \
+            libavdevice-dev=7:4.4.2-0ubuntu0.1 \
+            libavutil-dev=7:4.4.2-0ubuntu0.1 \
+            libavfilter-dev=7:4.4.2-0ubuntu0.1 \
             libbz2-dev \
             libeigen3-dev \
             libffi-dev \
