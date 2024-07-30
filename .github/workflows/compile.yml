@@ -118,7 +118,6 @@ jobs:
 
     - name: Build opAIO
       run: |
-        source $HOME/.poetry/env
         export COMMA_HOME=$HOME/.comma
         export PARAMS_PATH=$HOME/.comma/params
         export FROGPILOT_HOME=$HOME/.frogpilot
