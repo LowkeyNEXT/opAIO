@@ -14,7 +14,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -23,116 +23,135 @@ jobs:
         ref: bp-BPilot-BANNABLE
         fetch-depth: 0
 
+    - name: Set up Docker container
+      run: |
+        docker run --name build-container -d -v ${{ github.workspace }}:/workspace -w /workspace ubuntu:20.04 tail -f /dev/null
+
     - name: Install system dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends \
-          ca-certificates \
-          clang \
-          cppcheck \
-          build-essential \
-          gcc-arm-none-eabi \
-          liblzma-dev \
-          capnproto \
-          libcapnp-dev \
-          curl \
-          libcurl4-openssl-dev \
-          git \
-          git-lfs \
-          ffmpeg \
-          libavformat-dev \
-          libavcodec-dev \
-          libavdevice-dev \
-          libavutil-dev \
-          libavfilter-dev \
-          libbz2-dev \
-          libeigen3-dev \
-          libffi-dev \
-          libglew-dev \
-          libgles2-mesa-dev \
-          libglfw3-dev \
-          libglib2.0-0 \
-          libqt5charts5-dev \
-          libncurses5-dev \
-          libssl-dev \
-          libusb-1.0-0-dev \
-          libzmq3-dev \
-          libsqlite3-dev \
-          libsystemd-dev \
-          locales \
-          opencl-headers \
-          ocl-icd-libopencl1 \
-          ocl-icd-opencl-dev \
-          portaudio19-dev \
-          qtmultimedia5-dev \
-          qtlocation5-dev \
-          qtpositioning5-dev \
-          qttools5-dev-tools \
-          libqt5svg5-dev \
-          libqt5serialbus5-dev \
-          libqt5x11extras5-dev \
-          libqt5opengl5-dev \
-          libavresample-dev \
-          qt5-default \
-          python-dev \
-          casync \
-          cmake \
-          make \
-          clinfo \
-          libqt5sql5-sqlite \
-          libreadline-dev \
-          libdw1 \
-          autoconf \
-          libtool \
-          bzip2 \
-          libarchive-dev \
-          libncursesw5-dev \
-          libportaudio2 \
-          locales
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+        docker exec build-container bash -c "
+          apt-get update &&
+          apt-get install -y --no-install-recommends \
+            ca-certificates \
+            clang \
+            cppcheck \
+            build-essential \
+            gcc-arm-none-eabi \
+            liblzma-dev \
+            capnproto \
+            libcapnp-dev \
+            curl \
+            libcurl4-openssl-dev \
+            git \
+            git-lfs \
+            ffmpeg \
+            libavformat-dev \
+            libavcodec-dev \
+            libavdevice-dev \
+            libavutil-dev \
+            libavfilter-dev \
+            libbz2-dev \
+            libeigen3-dev \
+            libffi-dev \
+            libglew-dev \
+            libgles2-mesa-dev \
+            libglfw3-dev \
+            libglib2.0-0 \
+            libqt5charts5-dev \
+            libncurses5-dev \
+            libssl-dev \
+            libusb-1.0-0-dev \
+            libzmq3-dev \
+            libsqlite3-dev \
+            libsystemd-dev \
+            locales \
+            opencl-headers \
+            ocl-icd-libopencl1 \
+            ocl-icd-opencl-dev \
+            portaudio19-dev \
+            qtmultimedia5-dev \
+            qtlocation5-dev \
+            qtpositioning5-dev \
+            qttools5-dev-tools \
+            libqt5svg5-dev \
+            libqt5serialbus5-dev \
+            libqt5x11extras5-dev \
+            libqt5opengl5-dev \
+            libavresample-dev \
+            qt5-default \
+            python3.8 \
+            python3.8-venv \
+            python3.8-dev \
+            casync \
+            cmake \
+            make \
+            clinfo \
+            libqt5sql5-sqlite \
+            libreadline-dev \
+            libdw1 \
+            autoconf \
+            libtool \
+            bzip2 \
+            libarchive-dev \
+            libncursesw5-dev \
+            libportaudio2 \
+            locales
+        "
 
     - name: Install Poetry
       run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
+        docker exec build-container bash -c "
+          curl -sSL https://install.python-poetry.org | python3 - &&
+          echo 'export PATH=/root/.local/bin:\$PATH' >> /root/.bashrc &&
+          source /root/.bashrc
+        "
 
     - name: Install project dependencies
       run: |
-        source $GITHUB_ENV
-        poetry env use python3.11
-        poetry install --no-root
+        docker exec build-container bash -c "
+          source /root/.bashrc &&
+          poetry env use python3.8 &&
+          poetry install --no-root
+        "
 
-    - name: Set environment variables
+    - name: Set environment variables and directories
       run: |
-        echo "COMMA_HOME=$HOME/.comma" >> $GITHUB_ENV
-        echo "PARAMS_PATH=$HOME/.comma/params" >> $GITHUB_ENV
-        echo "FROGPILOT_HOME=$HOME/.frogpilot" >> $GITHUB_ENV
-        mkdir -p $HOME/.comma/params
-        mkdir -p $HOME/.frogpilot
-        mkdir -p $HOME/.cache
-        mkdir -p $HOME/.config
-        mkdir -p $HOME/.local/share
-        mkdir -p $HOME/.cargo/bin
+        docker exec build-container bash -c "
+          echo 'COMMA_HOME=/workspace/.comma' >> /root/.bashrc &&
+          echo 'PARAMS_PATH=/workspace/.comma/params' >> /root/.bashrc &&
+          echo 'FROGPILOT_HOME=/workspace/.frogpilot' >> /root/.bashrc &&
+          mkdir -p /workspace/.comma/params &&
+          mkdir -p /workspace/.frogpilot &&
+          mkdir -p /workspace/.cache &&
+          mkdir -p /workspace/.config &&
+          mkdir -p /workspace/.local/share &&
+          mkdir -p /workspace/.cargo/bin &&
+          source /root/.bashrc
+        "
 
     - name: Build opAIO
       run: |
-        source $GITHUB_ENV
-        poetry run scons -j$(nproc)
+        docker exec build-container bash -c "
+          source /root/.bashrc &&
+          poetry run scons -j\$(nproc)
+        "
 
     - name: Commit and push compiled files
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add .
-        git commit -m "Add compiled version [skip ci]" || echo "No changes to commit"
-        git push
+        docker exec build-container bash -c "
+          git config --local user.email 'action@github.com' &&
+          git config --local user.name 'GitHub Action' &&
+          git add . &&
+          git commit -m 'Add compiled version [skip ci]' || echo 'No changes to commit' &&
+          git push
+        "
 
     - name: Push changes
       uses: ad-m/github-push-action@v0.6.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: ${{ github.ref }}
+
+    - name: Clean up Docker container
+      if: always()
+      run: docker rm -f build-container
