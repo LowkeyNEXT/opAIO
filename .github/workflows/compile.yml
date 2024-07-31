@@ -102,20 +102,10 @@ jobs:
             libncursesw5-dev \
             libportaudio2 \
             locales \
-            libomxil-bellagio-dev \
-            libomxil-bellagio-bin
+            libomxil-bellagio0
 
           curl -sSL https://install.python-poetry.org | python3.11 -
           export PATH=\"/root/.local/bin:\$PATH\"
-
-          # Ensure OMX libraries are present
-          if [ ! -f /usr/lib/x86_64-linux-gnu/libOmxCore.so ]; then
-            echo 'libOmxCore.so not found, installing manually...'
-            # Manually download and install libOmxCore.so
-            curl -sSL http://mirrors.kernel.org/ubuntu/pool/universe/libo/libomxil-bellagio/libomxil-bellagio0-components-main_0.9.3-3.1_amd64.deb -o libomxil-bellagio.deb
-            dpkg -i libomxil-bellagio.deb
-            ldconfig
-          fi
 
           export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
           export COMMA_HOME=\$HOME/.comma
