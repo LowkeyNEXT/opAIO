@@ -105,7 +105,7 @@ jobs:
       run: |
         docker exec build-container bash -c "
           curl -sSL https://install.python-poetry.org | python3 - &&
-          echo 'export PATH=/root/.local/bin:\$PATH' >> /root/.bashrc &&
+          echo 'export PATH=/root/.local/bin:$PATH' >> /root/.bashrc &&
           source /root/.bashrc
         "
 
@@ -113,8 +113,8 @@ jobs:
       run: |
         docker exec build-container bash -c "
           source /root/.bashrc &&
-          poetry env use python3.8 &&
-          poetry install --no-root
+          /root/.local/bin/poetry env use python3.8 &&
+          /root/.local/bin/poetry install --no-root
         "
 
     - name: Set environment variables and directories
@@ -136,7 +136,7 @@ jobs:
       run: |
         docker exec build-container bash -c "
           source /root/.bashrc &&
-          poetry run scons -j\$(nproc)
+          /root/.local/bin/poetry run scons -j\$(nproc)
         "
 
     - name: Commit and push compiled files
