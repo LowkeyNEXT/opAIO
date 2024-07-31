@@ -107,7 +107,7 @@ jobs:
           curl -sSL https://install.python-poetry.org | python3.11 -
           export PATH=\"/root/.local/bin:\$PATH\"
 
-          wget -O libomxil-bellagio.deb http://archive.ubuntu.com/ubuntu/pool/universe/libo/libomxil-bellagio/libomxil-bellagio0_0.9.3-2.1build2_amd64.deb
+          wget -O libomxil-bellagio.deb http://archive.ubuntu.com/ubuntu/pool/universe/libo/libomxil-bellagio/libomxil-bellagio0_0.9.3-2_amd64.deb
           dpkg -i libomxil-bellagio.deb || apt-get install -f -y
 
           export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
