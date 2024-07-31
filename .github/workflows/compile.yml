@@ -30,8 +30,11 @@ jobs:
     - name: Install system dependencies
       run: |
         docker exec build-container bash -c "
+          export DEBIAN_FRONTEND=noninteractive &&
+          ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime &&
           apt-get update &&
           apt-get install -y --no-install-recommends \
+            tzdata \
             ca-certificates \
             clang \
             cppcheck \
