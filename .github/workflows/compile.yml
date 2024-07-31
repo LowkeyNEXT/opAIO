@@ -101,7 +101,9 @@ jobs:
             libarchive-dev \
             libncursesw5-dev \
             libportaudio2 \
-            locales
+            locales \
+            libomxil-bellagio-dev \
+            libomxil-bellagio-bin
 
           curl -sSL https://install.python-poetry.org | python3.11 -
           export PATH=\"/root/.local/bin:\$PATH\"
