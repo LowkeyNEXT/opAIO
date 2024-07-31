@@ -14,7 +14,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v4
@@ -23,17 +23,20 @@ jobs:
         ref: bp-BPilot-BANNABLE
         fetch-depth: 0
 
-    - name: Set up Docker container
+    - name: Set up Docker and Install Dependencies
       run: |
-        docker run --name build-container -d -v ${{ github.workspace }}:/workspace -w /workspace ubuntu:20.04 tail -f /dev/null
-
-    - name: Install system dependencies
-      run: |
-        docker exec build-container bash -c "
-          export DEBIAN_FRONTEND=noninteractive &&
-          ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime &&
-          apt-get update &&
-          apt-get install -y --no-install-recommends \
+        docker run --name build-container --rm \
+          -v ${{ github.workspace }}:/workspace \
+          -w /workspace \
+          ubuntu:20.04 \
+          bash -c "
+          set -e
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get install -y software-properties-common
+          add-apt-repository ppa:deadsnakes/ppa
+          apt-get update
+          apt-get install -y \
             tzdata \
             ca-certificates \
             clang \
@@ -82,9 +85,9 @@ jobs:
             libqt5opengl5-dev \
             libavresample-dev \
             qt5-default \
-            python3.8 \
-            python3.8-venv \
-            python3.8-dev \
+            python3.11 \
+            python3.11-venv \
+            python3.11-dev \
             casync \
             cmake \
             make \
@@ -99,62 +102,38 @@ jobs:
             libncursesw5-dev \
             libportaudio2 \
             locales
-        "
 
-    - name: Install Poetry
-      run: |
-        docker exec build-container bash -c "
-          curl -sSL https://install.python-poetry.org | python3 - &&
-          echo 'export PATH=/root/.local/bin:$PATH' >> /root/.bashrc &&
-          source /root/.bashrc
-        "
+          curl -sSL https://install.python-poetry.org | python3.11 -
+          export PATH=\"/root/.local/bin:\$PATH\"
 
-    - name: Install project dependencies
-      run: |
-        docker exec build-container bash -c "
-          source /root/.bashrc &&
-          /root/.local/bin/poetry env use python3.8 &&
+          export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
+          export COMMA_HOME=\$HOME/.comma
+          export PARAMS_PATH=\$HOME/.comma/params
+          export FROGPILOT_HOME=\$HOME/.frogpilot
+          mkdir -p \$COMMA_HOME/params
+          mkdir -p \$FROGPILOT_HOME
+          mkdir -p \$HOME/.cache
+          mkdir -p \$HOME/.config
+          mkdir -p \$HOME/.local/share
+          mkdir -p \$HOME/.cargo/bin
+
+          git config --global --add safe.directory /workspace
+
+          /root/.local/bin/poetry env use python3.11
           /root/.local/bin/poetry install --no-root
-        "
-
-    - name: Set environment variables and directories
-      run: |
-        docker exec build-container bash -c "
-          echo 'COMMA_HOME=/workspace/.comma' >> /root/.bashrc &&
-          echo 'PARAMS_PATH=/workspace/.comma/params' >> /root/.bashrc &&
-          echo 'FROGPILOT_HOME=/workspace/.frogpilot' >> /root/.bashrc &&
-          mkdir -p /workspace/.comma/params &&
-          mkdir -p /workspace/.frogpilot &&
-          mkdir -p /workspace/.cache &&
-          mkdir -p /workspace/.config &&
-          mkdir -p /workspace/.local/share &&
-          mkdir -p /workspace/.cargo/bin &&
-          source /root/.bashrc
-        "
-
-    - name: Build opAIO
-      run: |
-        docker exec build-container bash -c "
-          source /root/.bashrc &&
           /root/.local/bin/poetry run scons -j\$(nproc)
-        "
+          "
 
     - name: Commit and push compiled files
       run: |
-        docker exec build-container bash -c "
-          git config --local user.email 'action@github.com' &&
-          git config --local user.name 'GitHub Action' &&
-          git add . &&
-          git commit -m 'Add compiled version [skip ci]' || echo 'No changes to commit' &&
-          git push
-        "
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git commit -m "Add compiled version [skip ci]" || echo "No changes to commit"
+        git push
 
     - name: Push changes
       uses: ad-m/github-push-action@v0.6.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: ${{ github.ref }}
-
-    - name: Clean up Docker container
-      if: always()
-      run: docker rm -f build-container
