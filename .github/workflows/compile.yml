@@ -28,7 +28,13 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y docker.io
 
-    - name: Upload necessary files
+    - name: Change permissions of scripts
+      run: |
+        chmod +x /mnt/data/ubuntu_setup.sh
+        chmod +x /mnt/data/install_ubuntu_dependencies.sh
+        chmod +x /mnt/data/install_python_dependencies.sh
+
+    - name: Copy necessary files
       run: |
         cp /mnt/data/ubuntu_setup.sh .
         cp /mnt/data/install_ubuntu_dependencies.sh tools/
@@ -38,12 +44,6 @@ jobs:
         cp /mnt/data/pre-commit-config.yaml .
         cp /mnt/data/Dockerfile.openpilot_base .
         cp /mnt/data/Dockerfile.openpilot .
-
-    - name: Change permissions of scripts
-      run: |
-        chmod +x ubuntu_setup.sh
-        chmod +x tools/install_ubuntu_dependencies.sh
-        chmod +x tools/install_python_dependencies.sh
 
     - name: Build Docker Image
       run: |
