@@ -28,6 +28,17 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y docker.io
 
+    - name: Upload necessary files
+      run: |
+        cp /mnt/data/ubuntu_setup.sh .
+        cp /mnt/data/install_ubuntu_dependencies.sh tools/
+        cp /mnt/data/install_python_dependencies.sh tools/
+        cp /mnt/data/pyproject.toml .
+        cp /mnt/data/poetry.lock .
+        cp /mnt/data/pre-commit-config.yaml .
+        cp /mnt/data/Dockerfile.openpilot_base .
+        cp /mnt/data/Dockerfile.openpilot .
+
     - name: Change permissions of scripts
       run: |
         chmod +x ubuntu_setup.sh
