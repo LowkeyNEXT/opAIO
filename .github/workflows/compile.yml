@@ -45,6 +45,8 @@ jobs:
           ./ubuntu_setup.sh
           export PATH=\"/root/.local/bin:\$PATH\"
           poetry install --no-root
+          source \$(poetry env info --path)/bin/activate
+          export PYTHONPATH=\$(poetry env info --path)/lib/python3.11/site-packages:\$PYTHONPATH
           poetry run scons -j\$(nproc)
         "
 
