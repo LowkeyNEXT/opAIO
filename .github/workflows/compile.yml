@@ -23,19 +23,23 @@ jobs:
         ref: bp-BPilot-BANNABLE
         fetch-depth: 0
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+    - name: Install Docker
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker.io
 
     - name: Build Docker Image
       run: |
-        docker build -t openpilot-image -f Dockerfile.openpilot .
+        docker build -t openpilot-base -f Dockerfile.openpilot_base .
+        docker build -t openpilot -f Dockerfile.openpilot .
 
-    - name: Run Build in Docker Container
+    - name: Run Docker Container
       run: |
-        docker run --rm \
-          -v ${{ github.workspace }}:/workspace \
-          -w /workspace \
-          openpilot-image
+        docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace openpilot /bin/bash -c "
+          set -e
+          ./ubuntu_setup.sh
+          poetry run scons -j\$(nproc)
+        "
 
     - name: Commit and push compiled files
       run: |
