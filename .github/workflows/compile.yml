@@ -30,6 +30,7 @@ jobs:
 
     - name: Change permissions of scripts
       run: |
+        chmod +x ubuntu_setup.sh
         chmod +x tools/install_ubuntu_dependencies.sh
         chmod +x tools/install_python_dependencies.sh
 
@@ -47,7 +48,9 @@ jobs:
           poetry install --no-root
           source \$(poetry env info --path)/bin/activate
           export PYTHONPATH=\$(poetry env info --path)/lib/python3.11/site-packages:\$PYTHONPATH
-          poetry run scons -j\$(nproc)
+          # Verify that setproctitle is installed
+          python3 -c 'import setproctitle; print(setproctitle)'
+          scons -j\$(nproc)
         "
 
     - name: Commit and push compiled files
