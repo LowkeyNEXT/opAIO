@@ -43,6 +43,7 @@ jobs:
         docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace openpilot /bin/bash -c "
           set -e
           ./ubuntu_setup.sh
+          export PATH=\"/root/.local/bin:\$PATH\"
           poetry install --no-root
           poetry run scons -j\$(nproc)
         "
