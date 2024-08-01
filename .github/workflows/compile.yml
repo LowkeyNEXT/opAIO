@@ -28,9 +28,13 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y docker.io
 
-    - name: Change permissions and build Docker Image
+    - name: Change permissions of scripts
       run: |
         chmod +x tools/install_ubuntu_dependencies.sh
+        chmod +x tools/install_python_dependencies.sh
+
+    - name: Build Docker Image
+      run: |
         docker build -t openpilot-base -f Dockerfile.openpilot_base .
         docker build -t openpilot -f Dockerfile.openpilot .
 
