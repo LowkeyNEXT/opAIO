@@ -1,0 +1,79 @@
+name: Compile and Push BRid37 opAIO Fork
+
+on:
+  push:
+    branches: [ bp-BPilot-BANNABLE ]
+  pull_request:
+    branches: [ bp-BPilot-BANNABLE ]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual run'
+        required: false
+        default: 'Manual trigger'
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: BRid37/opAIO
+        ref: bp-BPilot-BANNABLE
+        fetch-depth: 0
+
+    - name: Install Docker
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker.io
+
+    - name: Change permissions of scripts
+      run: |
+        chmod +x /mnt/data/ubuntu_setup.sh
+        chmod +x /mnt/data/install_ubuntu_dependencies.sh
+        chmod +x /mnt/data/install_python_dependencies.sh
+
+    - name: Copy necessary files
+      run: |
+        cp /mnt/data/ubuntu_setup.sh .
+        cp /mnt/data/install_ubuntu_dependencies.sh tools/
+        cp /mnt/data/install_python_dependencies.sh tools/
+        cp /mnt/data/pyproject.toml .
+        cp /mnt/data/poetry.lock .
+        cp /mnt/data/pre-commit-config.yaml .
+        cp /mnt/data/Dockerfile.openpilot_base .
+        cp /mnt/data/Dockerfile.openpilot .
+
+    - name: Build Docker Image
+      run: |
+        docker build -t openpilot-base -f Dockerfile.openpilot_base .
+        docker build -t openpilot -f Dockerfile.openpilot .
+
+    - name: Run Docker Container
+      run: |
+        docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace openpilot /bin/bash -c "
+          set -e
+          ./ubuntu_setup.sh
+          export PATH=\"/root/.local/bin:\$PATH\"
+          poetry install --no-root
+          source \$(poetry env info --path)/bin/activate
+          export PYTHONPATH=\$(poetry env info --path)/lib/python3.11/site-packages:\$PYTHONPATH
+          # Verify that setproctitle is installed
+          python3 -c 'import setproctitle; print(setproctitle)'
+          scons -j\$(nproc)
+        "
+
+    - name: Commit and push compiled files
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git commit -m "Add compiled version [skip ci]" || echo "No changes to commit"
+        git push
+
+    - name: Push changes
+      uses: ad-m/github-push-action@v0.6.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
