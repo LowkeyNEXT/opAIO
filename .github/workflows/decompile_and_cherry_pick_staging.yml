@@ -1,8 +1,8 @@
-name: Decompile and Cherry Pick BPilot
+name: Decompile and Cherry Pick Staging
 
 on:
   workflow_run:
-    workflows: ["Sync bp-BPilot-BANNABLE"]
+    workflows: ["Sync fp-FrogPilot-Staging"]
     types:
       - completed
   workflow_dispatch:
@@ -32,8 +32,8 @@ jobs:
       - name: Ensure clean state and fetch all branches
         run: |
           git fetch --all
-          git checkout -b temp-branch origin/bp-BPilot-BANNABLE
-          git reset --hard origin/bp-BPilot-BANNABLE
+          git checkout -b temp-branch origin/fp-FrogPilot-Staging
+          git reset --hard origin/fp-FrogPilot-Staging
           git clean -fdx
 
       - name: Exclude workflow file from operations if it exists
@@ -168,12 +168,7 @@ jobs:
       - name: Cherry-pick additional commits
         run: |
           cherry_picks=(
-            3e4eae970e44bda7773127a284d50743b1ba9233 #HKG Steer Enhancements
-            ce5aec7325fd16bcb296dee616380f9121f2b8a5 #Faster Auto Tune
-            78170a23f5d848ddee248565d29314891d2499bf #Startup Message
-            b5736adec9758bf615f3fafde5f1db8729518317 #Fast Boot
-            ac19a1419936030d105e42bd35e8e226daf43aee #Stock Icons
-            d274e77752a4a9315adb907d8f462d773bbdfc49 #True AOL
+            d274e77752a4a9315adb907d8f462d773bbdfc49 #AOL LKAS
           )
           failed_cherry_picks=()
           for commit in "${cherry_picks[@]}"; do
@@ -202,5 +197,5 @@ jobs:
         run: |
           echo "Pushing changes to remote repository"
           git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
-          git push origin temp-branch:bp-BPilot-BANNABLE --force
+          git push origin temp-branch:fp-FrogPilot-Staging --force
           echo "Push completed"
