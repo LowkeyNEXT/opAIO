@@ -168,7 +168,7 @@ jobs:
       - name: Cherry-pick additional commits
         run: |
           cherry_picks=(
-            d274e77752a4a9315adb907d8f462d773bbdfc49 #AOL LKAS
+            ddab71435bca5f0e25580c96562ba5490a4d055f #AOL LKAS
           )
           failed_cherry_picks=()
           for commit in "${cherry_picks[@]}"; do
