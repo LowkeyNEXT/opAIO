@@ -1,4 +1,4 @@
-name: Sync FrogPilot-Staging
+name: Sync fp-FrogPilot-Staging
 
 on:
   schedule:
