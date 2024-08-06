@@ -168,12 +168,12 @@ jobs:
       - name: Cherry-pick additional commits
         run: |
           cherry_picks=(
-            3e4eae970e44bda7773127a284d50743b1ba9233 #HKG Steer Enhancements
-            ce5aec7325fd16bcb296dee616380f9121f2b8a5 #Faster Auto Tune
-            78170a23f5d848ddee248565d29314891d2499bf #Startup Message
-            b5736adec9758bf615f3fafde5f1db8729518317 #Fast Boot
-            ac19a1419936030d105e42bd35e8e226daf43aee #Stock Icons
-            d274e77752a4a9315adb907d8f462d773bbdfc49 #True AOL
+            e17123e2e9e6a656a8821954868b4ade4d9703eb #HKG Steer Enhancements
+            12f480a551b541e782f56f2c41bed4056c10447a #Faster Auto Tune
+            4361a971767a7aae3aca194a168ce66c0cf85455 #Startup Message
+            fe2d6778bf2d3ed0de468127554daff26297c0bc #Fast Boot
+            ab95ccd8e284929ff84932a48253901ae695eb90 #Stock Icons
+            ddab71435bca5f0e25580c96562ba5490a4d055f #True AOL
           )
           failed_cherry_picks=()
           for commit in "${cherry_picks[@]}"; do
