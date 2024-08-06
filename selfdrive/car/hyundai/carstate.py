@@ -58,7 +58,9 @@ class CarState(CarStateBase):
     self.active_mode = 0
     self.drive_mode_prev = 0
 
-  # Traffic signals for Speed Limit Controller - Credit goes to Multikyd!
+    self.lkas_previously_enabled = False
+
+# Traffic signals for Speed Limit Controller - Credit goes to Multikyd!
   def calculate_speed_limit(self, cp, cp_cam):
     if self.CP.carFingerprint in CANFD_CAR:
       speed_limit_bus = cp if self.CP.flags & HyundaiFlags.CANFD_HDA2 else cp_cam

@@ -90,6 +90,13 @@ void hyundai_common_cruise_buttons_check(const int cruise_button, const bool mai
   }
 }
 
+void hyundai_lkas_button_check(const bool lkas_pressed) {
+  if ((lkas_pressed && !lkas_pressed_prev) && (alternative_experience & ALT_EXP_ALWAYS_ON_LATERAL)) {
+    aol_allowed = true;
+  }
+  lkas_pressed_prev = lkas_pressed;
+}
+
 uint32_t hyundai_common_canfd_compute_checksum(const CANPacket_t *to_push) {
   int len = GET_LEN(to_push);
   uint32_t address = GET_ADDR(to_push);

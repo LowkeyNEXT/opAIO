@@ -1038,12 +1038,14 @@ class Controls:
   def update_frogpilot_variables(self, CS, frogpilotCarState, frogpilotPlan):
     driving_gear = CS.gearShifter not in (GearShifter.neutral, GearShifter.park, GearShifter.reverse, GearShifter.unknown)
 
-    self.always_on_lateral_active |= self.frogpilot_toggles.always_on_lateral_main or CS.cruiseState.enabled
-    self.always_on_lateral_active &= self.frogpilot_toggles.always_on_lateral and CS.cruiseState.available
+    self.always_on_lateral_active |= (self.frogpilot_toggles.always_on_lateral_main or CS.cruiseState.enabled) or \
+                                     self.frogpilot_toggles.always_on_lateral_lkas
+    self.always_on_lateral_active &= self.frogpilot_toggles.always_on_lateral
     self.always_on_lateral_active &= driving_gear
     self.always_on_lateral_active &= self.speed_check
-    self.always_on_lateral_active &= not (self.frogpilot_toggles.always_on_lateral_lkas and frogpilotCarState.alwaysOnLateralDisabled)
     self.always_on_lateral_active &= not (CS.brakePressed and CS.vEgo < self.frogpilot_toggles.always_on_lateral_pause_speed) or CS.standstill
+    self.always_on_lateral_active &= (self.frogpilot_toggles.always_on_lateral_lkas and frogpilotCarState.alwaysOnLateralEnabled) or \
+                                     (self.frogpilot_toggles.always_on_lateral_main and CS.cruiseState.available)
 
     self.drive_distance += CS.vEgo * DT_CTRL
     self.drive_time += DT_CTRL
