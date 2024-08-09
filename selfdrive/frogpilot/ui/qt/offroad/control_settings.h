@@ -50,7 +50,7 @@ private:
   std::set<QString> modelManagementKeys = {"AutomaticallyUpdateModels", "ModelRandomizer", "DeleteModel", "DownloadModel", "DownloadAllModels", "SelectModel", "ResetCalibrations"};
   std::set<QString> modelRandomizerKeys = {"ManageBlacklistedModels", "ResetScores", "ReviewScores"};
   std::set<QString> mtscKeys = {"DisableMTSCSmoothing", "MTSCAggressiveness", "MTSCCurvatureCheck"};
-  std::set<QString> qolKeys = {"CustomCruise", "CustomCruiseLong", "ForceStandstill", "MapGears", "PauseLateralSpeed", "ReverseCruise", "SetSpeedOffset"};
+  std::set<QString> qolKeys = {"MainOnStart", "MuteDM", "MuteDoor", "MuteSeatbelt", "CustomCruise", "CustomCruiseLong", "ForceStandstill", "MapGears", "PauseLateralSpeed", "ReverseCruise", "SetSpeedOffset"};
   std::set<QString> relaxedPersonalityKeys = {"PersonalityInfo", "RelaxedFollow", "RelaxedJerkAcceleration", "RelaxedJerkDanger", "RelaxedJerkSpeed", "ResetRelaxedPersonality"};
   std::set<QString> speedLimitControllerKeys = {"SLCControls", "SLCQOL", "SLCVisuals"};
   std::set<QString> speedLimitControllerControlsKeys = {"Offset1", "Offset2", "Offset3", "Offset4", "SLCFallback", "SLCOverride", "SLCPriority"};

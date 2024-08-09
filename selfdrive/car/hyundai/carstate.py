@@ -11,6 +11,8 @@ from openpilot.selfdrive.car.hyundai.values import HyundaiFlags, CAR, DBC, CAN_G
                                                    CANFD_CAR, Buttons, CarControllerParams
 from openpilot.selfdrive.car.interfaces import CarStateBase
 
+from openpilot.common.params import Params
+
 PREV_BUTTON_SAMPLES = 8
 CLUSTER_SAMPLE_RATE = 20  # frames
 STANDSTILL_THRESHOLD = 12 * 0.03125 * CV.KPH_TO_MS
@@ -53,7 +55,8 @@ class CarState(CarStateBase):
     self.params = CarControllerParams(CP)
 
     # FrogPilot variables
-    self.main_enabled = False
+    self.params_ram = Params("/dev/shm/params")
+    self.main_enabled = self.params_ram.get_bool("MainOnStart")
 
     self.active_mode = 0
     self.drive_mode_prev = 0

@@ -538,6 +538,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"WD40Score", PERSISTENT | FROGPILOT_CONTROLS},
     {"WheelIcon", PERSISTENT | FROGPILOT_STORAGE | FROGPILOT_VISUALS},
     {"WheelSpeed", PERSISTENT | FROGPILOT_STORAGE | FROGPILOT_VISUALS},
+    {"MainOnStart", PERSISTENT},
 };
 
 } // namespace

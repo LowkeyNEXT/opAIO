@@ -32,6 +32,7 @@ def manager_init() -> None:
 
   params = Params()
   params_storage = Params("/persist/params")
+  params_ram = Params("/dev/shm/params")
   params.clear_all(ParamKeyType.CLEAR_ON_MANAGER_START)
   params.clear_all(ParamKeyType.CLEAR_ON_ONROAD_TRANSITION)
   params.clear_all(ParamKeyType.CLEAR_ON_OFFROAD_TRANSITION)
@@ -349,7 +350,8 @@ def manager_init() -> None:
     ("WD40LiveTorqueParameters", ""),
     ("WD40Score", "0"),
     ("WheelIcon", "3"),
-    ("WheelSpeed", "0")
+    ("WheelSpeed", "0"),
+    ("MainOnStart", "0"),
   ]
   if not PC:
     default_params.append(("LastUpdateTime", datetime.datetime.utcnow().isoformat().encode('utf8')))
@@ -366,6 +368,7 @@ def manager_init() -> None:
         params.put(k, params_storage.get(k))
     else:
       params_storage.put(k, params.get(k))
+      params_ram.put(k, params.get(k))
 
   params.put_bool_nonblocking("DoToggleReset", False)
 
