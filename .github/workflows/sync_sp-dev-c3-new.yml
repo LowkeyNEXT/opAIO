@@ -1,0 +1,22 @@
+name: Sync sp-dev-c3-new
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: sp-dev-c3-new
+          persist-credentials: false
+      - name: Sync with Remote Repo
+        uses: repo-sync/github-sync@v2.3.0
+        with:
+          source_repo: "https://github.com/sunnypilot/sunnypilot"
+          source_branch: "dev-c3-new"
+          destination_branch: "sp-dev-c3-new"
+          github_token: ${{ secrets.PAT }}
