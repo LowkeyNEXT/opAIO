@@ -16,7 +16,7 @@ jobs:
       - name: Sync with Remote Repo
         uses: repo-sync/github-sync@v2.3.0
         with:
-          source_repo: "https://github.com/FrogAi/FrogPilot/tree/FrogPilot-Testing"
+          source_repo: "https://github.com/FrogAi/FrogPilot"
           source_branch: "FrogPilot-Testing"
           destination_branch: "bp-BPilot-BANNABLE-Testing"
           github_token: ${{ secrets.PAT }}
