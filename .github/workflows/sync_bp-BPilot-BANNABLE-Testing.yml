@@ -1,0 +1,22 @@
+name: Sync bp-BPilot-BANNABLE-Testing
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: bp-BPilot-BANNABLE-Testing
+          persist-credentials: false
+      - name: Sync with Remote Repo
+        uses: repo-sync/github-sync@v2.3.0
+        with:
+          source_repo: "https://github.com/FrogAi/FrogPilot/tree/FrogPilot-Testing"
+          source_branch: "FrogPilot-Testing"
+          destination_branch: "bp-BPilot-BANNABLE-Testing"
+          github_token: ${{ secrets.PAT }}
