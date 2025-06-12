@@ -1,0 +1,207 @@
+name: Decompile and Cherry Pick BPilot
+
+on:
+  workflow_run:
+    workflows: ["Sync fp-FrogPilot-Testing"]
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  revert-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure Git to skip symlinks
+        run: git config --global core.symlinks false
+
+      - name: Checkout repo without symlinks
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Git Config
+        run: |
+          git config --global user.email "55640145+BRid37@users.noreply.github.com"
+          git config --global user.name "BRid37"
+
+      - name: Ensure clean state and fetch all branches
+        run: |
+          git fetch --all
+          git checkout -b temp-branch origin/fp-FrogPilot-Testing
+          git reset --hard origin/fp-FrogPilot-Testing
+          git clean -fdx
+
+      - name: Exclude workflow file from operations if it exists
+        run: |
+          if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
+            git update-index --assume-unchanged .github/workflows/auto-cache/action.yaml
+            echo "Excluded .github/workflows/auto-cache/action.yaml from git operations."
+          else
+            echo "File .github/workflows/auto-cache/action.yaml does not exist. Skipping exclusion."
+          fi
+
+      - name: Find compile commit
+        id: find-compile-commit
+        run: |
+          echo "Searching for compile commit..."
+          compile_commit=$(git log --oneline --first-parent --grep "Compile FrogPilot" | head -n 1 | cut -d " " -f 1)
+          if [ -z "$compile_commit" ]; then
+            echo "Error: Compile commit not found."
+            exit 1
+          fi
+          echo "Found compile commit: $compile_commit"
+          echo "compile_commit=$compile_commit" >> $GITHUB_ENV
+          echo "compile_commit=$compile_commit" >> $GITHUB_OUTPUT
+
+      - name: Get all commits after the compile commit
+        id: commits-after-compile
+        run: |
+          compile_commit=${{ env.compile_commit }}
+          echo "Finding commits after compile commit: $compile_commit"
+          
+          # Get all commits after the compile commit
+          commits_after_compile=$(git rev-list $compile_commit..HEAD | tac)
+          
+          # Print the commits
+          echo "Commits after compile commit (from oldest to newest):"
+          echo "$commits_after_compile" | while read -r commit; do
+            commit_message=$(git log -1 --format=%B $commit)
+            echo "Commit: $commit"
+            echo "Message: $commit_message"
+            echo "---"
+          done
+          
+          # Save the commits for later steps
+          echo "commits<<EOF" >> $GITHUB_OUTPUT
+          echo "$commits_after_compile" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          # Count the number of commits
+          commit_count=$(echo "$commits_after_compile" | wc -l)
+          echo "Number of commits after compile commit: $commit_count"
+          
+          if [ "$commit_count" -eq 0 ]; then
+            echo "Warning: No commits found after the compile commit."
+          fi
+
+      - name: Revert commits after compile commit
+        run: |
+          commits_after_compile="${{ steps.commits-after-compile.outputs.commits }}"
+          IFS=$'\n' read -r -a commit_array <<< "$commits_after_compile"
+          echo "Number of commits to revert: ${#commit_array[@]}"
+          for commit in "${commit_array[@]}"; do
+            echo "Attempting to revert commit: $commit"
+            commit_message=$(git log -1 --format=%B $commit)
+            echo "Commit message: $commit_message"
+            if git revert --no-edit $commit; then 
+              echo "Successfully reverted commit: $commit"
+              # Remove the file from git tracking if it exists
+              if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
+                git update-index --assume-unchanged .github/workflows/auto-cache/action.yaml
+              fi
+            else
+              echo "Failed to revert commit: $commit"
+              echo "Aborting revert and exiting."
+              git revert --abort
+              exit 1
+            fi
+            echo "---"
+          done
+          
+          # Check the status after all reverts
+          git status
+          echo "All reverts completed successfully."
+
+      - name: Revert the compile commit
+        run: |
+          compile_commit=${{ env.compile_commit }}
+          echo "Attempting to revert compile commit: $compile_commit"
+          if git revert --no-edit $compile_commit; then
+            echo "Successfully reverted compile commit: $compile_commit"
+            # Remove the file from git tracking if it exists
+            if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
+              git update-index --assume-unchanged .github/workflows/auto-cache/action.yaml
+            fi
+          else
+            echo "Failed to revert compile commit: $compile_commit"
+            git revert --abort
+          fi
+          
+          # Check the status after the revert
+          git status
+          echo "Compile commit revert completed."
+
+      - name: Re-apply commits after compile commit
+        run: |
+          commits_after_compile="${{ steps.commits-after-compile.outputs.commits }}"
+          IFS=$'\n' read -r -a commit_array <<< "$commits_after_compile"
+          echo "Number of commits to re-apply: ${#commit_array[@]}"
+          for commit in "${commit_array[@]}"; do
+            echo "Attempting to re-apply commit: $commit"
+            commit_message=$(git log -1 --format=%B $commit)
+            echo "Commit message: $commit_message"
+            if git cherry-pick --strategy=recursive -X theirs $commit; then
+              echo "Successfully re-applied commit: $commit"
+            else
+              echo "Conflict detected while cherry-picking $commit. Resolving using incoming changes."
+              if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
+                git add -u ':!.github/workflows/auto-cache/action.yaml'
+              else
+                git add -u
+              fi
+              if git cherry-pick --continue; then
+                echo "Successfully resolved conflict and re-applied commit: $commit"
+              else
+                echo "Failed to resolve conflict for commit: $commit"
+                git cherry-pick --abort
+                exit 1
+              fi
+            fi
+            echo "---"
+          done
+
+      - name: Cherry-pick additional commits
+        run: |
+          cherry_picks=(
+            e17123e2e9e6a656a8821954868b4ade4d9703eb #HKG Steer Enhancements
+            12f480a551b541e782f56f2c41bed4056c10447a #Faster Auto Tune
+            4361a971767a7aae3aca194a168ce66c0cf85455 #Startup Message
+            fe2d6778bf2d3ed0de468127554daff26297c0bc #Fast Boot
+            ab95ccd8e284929ff84932a48253901ae695eb90 #Stock Icons
+            ddab71435bca5f0e25580c96562ba5490a4d055f #True AOL
+            b29235cfa4e37365b9efd979be58f3a3f9188bc8 #CC Main on start toggle
+          )
+          failed_cherry_picks=()
+          for commit in "${cherry_picks[@]}"; do
+            echo "Attempting to cherry-pick commit: $commit"
+            if git cherry-pick $commit; then
+              echo "Successfully cherry-picked commit: $commit"
+            else
+              echo "Failed to cherry-pick commit: $commit"
+              git cherry-pick --abort
+              failed_cherry_picks+=("$commit")
+            fi
+            echo "---"
+          done
+          
+          if [ ${#failed_cherry_picks[@]} -ne 0 ]; then
+            echo "The following cherry-picks failed:"
+            printf '%s\n' "${failed_cherry_picks[@]}"
+            echo "Please review these commits manually."
+          else
+            echo "All cherry-picks were successful."
+          fi
+
+      - name: Push changes
+        env:
+          PAT: ${{ secrets.PAT }}
+        run: |
+          echo "Pushing changes to remote repository"
+          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
+          git push origin temp-branch:fp-FrogPilot-Testing --force
+          echo "Push completed"
