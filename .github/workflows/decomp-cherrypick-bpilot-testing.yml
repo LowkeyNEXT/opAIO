@@ -1,8 +1,8 @@
-name: Decompile and Cherry Pick BPilot
+name: Decompile and Cherry Pick BPilot-Testing
 
 on:
   workflow_run:
-    workflows: ["Sync fp-FrogPilot-Testing"]
+    workflows: ["Sync bp-BPilot-BANNABLE-Testing"]
     types:
       - completed
   workflow_dispatch:
@@ -32,8 +32,8 @@ jobs:
       - name: Ensure clean state and fetch all branches
         run: |
           git fetch --all
-          git checkout -b temp-branch origin/fp-FrogPilot-Testing
-          git reset --hard origin/fp-FrogPilot-Testing
+          git checkout -b temp-branch origin/bp-BPilot-BANNABLE-Testing
+          git reset --hard origin/bp-BPilot-BANNABLE-Testing
           git clean -fdx
 
       - name: Exclude workflow file from operations if it exists
@@ -203,5 +203,5 @@ jobs:
         run: |
           echo "Pushing changes to remote repository"
           git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
-          git push origin temp-branch:fp-FrogPilot-Testing --force
+          git push origin temp-branch:bp-BPilot-BANNABLE-Testing --force
           echo "Push completed"
