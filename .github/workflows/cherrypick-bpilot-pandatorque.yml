@@ -1,0 +1,109 @@
+name: Cherry Pick BPilot-PandaTorque
+
+on:
+  workflow_run:
+    workflows: ["Sync bp-BPilot-BANNABLE-PandaTorque"]
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  cherry-pick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure Git to skip symlinks
+        run: git config --global core.symlinks false
+
+      - name: Checkout repo without symlinks
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Git Config
+        run: |
+          git config --global user.email "55640145+BRid37@users.noreply.github.com"
+          git config --global user.name "BRid37"
+
+      - name: Ensure clean state and fetch all branches
+        run: |
+          git fetch --all
+          git checkout -b temp-branch origin/bp-BPilot-BANNABLE
+          git reset --hard origin/bp-BPilot-BANNABLE
+          git clean -fdx
+
+      - name: Exclude workflow file from operations if it exists
+        run: |
+          if [ -f ".github/workflows/auto-cache/action.yaml" ]; then
+            git update-index --assume-unchanged .github/workflows/auto-cache/action.yaml
+            echo "Excluded .github/workflows/auto-cache/action.yaml from git operations."
+          else
+            echo "File .github/workflows/auto-cache/action.yaml does not exist. Skipping exclusion."
+          fi
+
+      - name: Cherry-pick torque and HUD tweaks
+        run: |
+          cherry_picks=(
+            7982f09ce484547614188bc13b9444f7d0101de8 #HKG CAN-FD Steering Enhancements
+            10ee3e346e79c618fe57856ee394cf3779f97c99 #Post-0.10 dash HUD tweaks
+          )
+          failed_cherry_picks=()
+          for commit in "${cherry_picks[@]}"; do
+            echo "Attempting to cherry-pick commit: $commit"
+            if git cherry-pick $commit; then
+              echo "Successfully cherry-picked commit: $commit"
+            else
+              echo "Failed to cherry-pick commit: $commit"
+              git cherry-pick --abort
+              failed_cherry_picks+=("$commit")
+            fi
+            echo "---"
+          done
+
+          if [ ${#failed_cherry_picks[@]} -ne 0 ]; then
+            echo "The following cherry-picks failed:"
+            printf '%s\n' "${failed_cherry_picks[@]}"
+            echo "Please review these commits manually."
+            exit 1
+          else
+            echo "All cherry-picks were successful."
+          fi
+
+      - name: Install panda build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi
+          python3 -m pip install --upgrade pip
+          pip install scons
+
+      - name: Build panda firmware
+        run: |
+          scons -C panda
+          ls -lh panda/board/obj
+
+      - name: Commit panda firmware artifacts
+        run: |
+          git add panda/board/obj/
+          git status
+          git commit -m "Build panda firmware" || echo "No firmware changes to commit"
+
+      - name: Upload panda firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: panda-firmware
+          path: |
+            panda/board/obj/panda.bin.signed
+            panda/board/obj/panda_h7.bin.signed
+
+      - name: Push changes
+        env:
+          PAT: ${{ secrets.PAT }}
+        run: |
+          echo "Pushing changes to remote repository"
+          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
+          git push origin temp-branch:bp-BPilot-BANNABLE-PandaTorque --force
+          echo "Push completed"
