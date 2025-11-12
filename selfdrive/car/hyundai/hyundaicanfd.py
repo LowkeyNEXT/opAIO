@@ -41,7 +41,7 @@ def create_steering_messages(packer, CP, CAN, enabled, lat_active, apply_steer):
 
   values = {
     "LKA_MODE": 2,
-    "LKA_ICON": 2 if enabled else 1,
+    "LKA_ICON": 2 if enabled else 2 if lat_active else 1,  # HDA2 green steer icon when lat active
     "TORQUE_REQUEST": apply_steer,
     "LKA_ASSIST": 0,
     "STEER_REQ": 1 if lat_active else 0,
@@ -113,15 +113,15 @@ def create_acc_cancel(packer, CP, CAN, cruise_info_copy):
   })
   return packer.make_can_msg("SCC_CONTROL", CAN.ECAN, values)
 
-def create_lfahda_cluster(packer, CAN, enabled):
+def create_lfahda_cluster(packer, CAN, enabled, lat_active):
   values = {
     "HDA_ICON": 1 if enabled else 0,
-    "LFA_ICON": 2 if enabled else 0,
+    "LFA_ICON": 2 if enabled else 2 if lat_active else 1,
   }
   return packer.make_can_msg("LFAHDA_CLUSTER", CAN.ECAN, values)
 
 
-def create_acc_control(packer, CAN, enabled, accel_last, accel, stopping, gas_override, set_speed):
+def create_acc_control(packer, CAN, enabled, accel_last, accel, stopping, gas_override, set_speed, hud_control):
   jerk = 5
   jn = jerk / 50
   if not enabled or gas_override:
@@ -132,7 +132,7 @@ def create_acc_control(packer, CAN, enabled, accel_last, accel, stopping, gas_ov
 
   values = {
     "ACCMode": 0 if not enabled else (2 if gas_override else 1),
-    "MainMode_ACC": 1,
+    "MainMode_ACC": 0 if not enabled else 1,
     "StopReq": 1 if stopping else 0,
     "aReqValue": a_val,
     "aReqRaw": a_raw,
@@ -146,7 +146,7 @@ def create_acc_control(packer, CAN, enabled, accel_last, accel, stopping, gas_ov
     "SET_ME_2": 0x4,
     "SET_ME_3": 0x3,
     "SET_ME_TMP_64": 0x64,
-    "DISTANCE_SETTING": 4,
+    "DISTANCE_SETTING": hud_control.leadDistanceBars,
   }
 
   return packer.make_can_msg("SCC_CONTROL", CAN.ECAN, values)
@@ -184,7 +184,7 @@ def create_adrv_messages(packer, CAN, frame):
 
   if frame % 2 == 0:
     values = {
-      'AEB_SETTING': 0x1,  # show AEB disabled icon
+      'AEB_SETTING': 0x0,
       'SET_ME_2': 0x2,
       'SET_ME_FF': 0xff,
       'SET_ME_FC': 0xfc,
