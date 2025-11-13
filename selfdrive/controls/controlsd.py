@@ -731,23 +731,38 @@ class Controls:
         good_speed = CS.vEgo > 5
         max_torque = abs(self.last_actuators.steer) > 0.99
         if undershooting and turning and good_speed and max_torque:
-          lac_log.active and self.events.add(EventName.steerSaturated)
-      elif lac_log.saturated:
-        # TODO probably should not use dpath_points but curvature
-        dpath_points = model_v2.position.y
-        if len(dpath_points):
-          # Check if we deviated from the path
-          # TODO use desired vs actual curvature
-          if self.CP.steerControlType == car.CarParams.SteerControlType.angle:
-            steering_value = actuators.steeringAngleDeg
+          if self.frogpilot_toggles.goat_scream_alert:
+            self.frogpilot_events.add(FrogPilotEventName.goatSteerSaturated)
           else:
-            steering_value = actuators.steer
-
-          left_deviation = steering_value > 0 and dpath_points[0] < -0.20
-          right_deviation = steering_value < 0 and dpath_points[0] > 0.20
-
-          if left_deviation or right_deviation:
             self.events.add(EventName.steerSaturated)
+      else:
+        clipped_speed = max(CS.vEgo, 0.3)
+        actual_lateral_accel = self.curvature * (clipped_speed**2)
+        desired_lateral_accel = model_v2.action.desiredCurvature * (clipped_speed**2)
+        undershooting = abs(desired_lateral_accel) / abs(1e-3 + actual_lateral_accel) > 1.2
+        turning = abs(desired_lateral_accel) > 1.0
+        # TODO: lac.saturated includes speed and other checks, should be pulled out
+        if undershooting and turning and lac_log.saturated:
+          if self.frogpilot_toggles.goat_scream_alert:
+            self.frogpilot_events.add(FrogPilotEventName.goatSteerSaturated)
+          else:
+            self.events.add(EventName.steerSaturated)
+        elif lac_log.saturated:
+          # TODO probably should not use dpath_points but curvature
+          dpath_points = model_v2.position.y
+          if len(dpath_points):
+            # Check if we deviated from the path
+            # TODO use desired vs actual curvature
+            if self.CP.steerControlType == car.CarParams.SteerControlType.angle:
+              steering_value = actuators.steeringAngleDeg
+            else:
+              steering_value = actuators.steer
+
+            left_deviation = steering_value > 0 and dpath_points[0] < -0.20
+            right_deviation = steering_value < 0 and dpath_points[0] > 0.20
+
+            if left_deviation or right_deviation:
+              self.events.add(EventName.steerSaturated)
 
     # Ensure no NaNs/Infs
     for p in ACTUATOR_FIELDS:
