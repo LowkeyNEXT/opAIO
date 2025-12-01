@@ -127,3 +127,7 @@ void updateFrogPilotToggles() {
   static Params params_memory{"", true};
   params_memory.putBool("FrogPilotTogglesUpdated", true);
 }
+
+QString cleanModelName(QString modelName) {
+  return modelName.remove("_default").remove("(Default)");
+}

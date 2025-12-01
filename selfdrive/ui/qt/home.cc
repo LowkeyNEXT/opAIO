@@ -302,5 +302,5 @@ void OffroadHome::refresh() {
   date->setText(QLocale(uiState()->language.mid(5)).toString(QDateTime::currentDateTime(), "dddd, MMMM d"));
   date->setVisible(util::system_time_valid());
 
-  version->setText(getBrand() + " v" + getVersion().left(14).trimmed());
+  version->setText(getBrand() + " v" + getVersion().left(14).trimmed() + " - " + cleanModelName(frogpilot_toggles.value("model_name").toString()));
 }

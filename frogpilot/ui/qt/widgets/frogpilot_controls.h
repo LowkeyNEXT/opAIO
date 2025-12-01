@@ -23,6 +23,8 @@ void loadImage(const QString &basePath, QPixmap &pixmap, QSharedPointer<QMovie> 
 void openDescriptions(bool forceOpenDescriptions, std::map<QString, AbstractControl*> toggles);
 void updateFrogPilotToggles();
 
+QString cleanModelName(QString modelName);
+
 const QString buttonStyle = R"(
   QPushButton {
     padding: 0px 25px 0px 25px;
