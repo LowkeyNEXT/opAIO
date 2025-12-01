@@ -39,7 +39,11 @@ void ModelRenderer::draw(QPainter &painter, const QRect &surface_rect) {
     update_leads(radar_state, model.getPosition());
     const auto &lead_two = radar_state.getLeadTwo();
     if (lead_one.getStatus()) {
-      drawLead(painter, lead_one, lead_vertices[0], surface_rect, QColor(frogpilot_toggles.value("lead_marker_color").toString()));
+      if (lead_one.getModelProb() >= frogpilot_toggles.value("lead_detection_probability").toDouble()) {
+        drawLead(painter, lead_one, lead_vertices[0], surface_rect, QColor(frogpilot_toggles.value("lead_marker_color").toString()));
+      } else {
+        drawLead(painter, lead_one, lead_vertices[0], surface_rect, frogpilot_nvg->whiteColor());
+      }
     } else {
       // FrogPilot variables
     if (lead_two.getStatus() && (std::abs(lead_one.getDRel() - lead_two.getDRel()) > 3.0)) {
