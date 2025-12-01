@@ -74,6 +74,7 @@ private:
   void paintStandstillTimer(QPainter &p);
   void paintStoppingPoint(QPainter &p);
   void paintTurnSignals(QPainter &p);
+  void paintWeather(QPainter &p);
   void updateSignals();
 
   bool blindspotLeft;
@@ -89,6 +90,7 @@ private:
   bool longitudinalPaused;
   bool redLight;
   bool speedLimitChanged;
+  bool weatherDaytime;
 
   int animationFrameIndex;
   int desiredFollowDistance;
@@ -98,6 +100,7 @@ private:
   int signalMovement;
   int signalWidth;
   int totalFrames;
+  int weatherId;
 
   float accelerationEgo;
   float cscSpeed;
@@ -156,6 +159,11 @@ private:
   QSharedPointer<QMovie> cemTurnIcon;
   QSharedPointer<QMovie> chillModeIcon;
   QSharedPointer<QMovie> experimentalModeIcon;
+  QSharedPointer<QMovie> weatherClearDay;
+  QSharedPointer<QMovie> weatherClearNight;
+  QSharedPointer<QMovie> weatherLowVisibility;
+  QSharedPointer<QMovie> weatherRain;
+  QSharedPointer<QMovie> weatherSnow;
 
   QString leadDistanceUnit;
   QString leadSpeedUnit;
