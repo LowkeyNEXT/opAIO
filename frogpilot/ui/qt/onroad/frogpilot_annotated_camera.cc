@@ -3,6 +3,9 @@
 FrogPilotAnnotatedCameraWidget::FrogPilotAnnotatedCameraWidget(QWidget *parent) : QWidget(parent) {
   QSize iconSize(img_size / 4, img_size / 4);
 
+  curveSpeedIcon = loadPixmap("../../frogpilot/assets/other_images/curve_speed.png", {btn_size, btn_size});
+  curveSpeedIconFlipped = curveSpeedIcon.transformed(QTransform().scale(-1, 1));
+
   loadGif("../../frogpilot/assets/other_images/curve_icon.gif", cemCurveIcon, QSize(widget_size, widget_size), this);
   loadGif("../../frogpilot/assets/other_images/lead_icon.gif", cemLeadIcon, QSize(widget_size, widget_size), this);
   loadGif("../../frogpilot/assets/other_images/speed_icon.gif", cemSpeedIcon, QSize(widget_size, widget_size), this);
@@ -48,10 +51,22 @@ void FrogPilotAnnotatedCameraWidget::updateState(const UIState &s, const FrogPil
 
   blindspotLeft = carState.getLeftBlindspot();
   blindspotRight = carState.getRightBlindspot();
+  cscControllingSpeed = frogpilotPlan.getCscControllingSpeed();
+  cscSpeed = frogpilotPlan.getCscSpeed();
+  cscTraining = frogpilotPlan.getCscTraining();
   experimentalMode = selfdriveState.getExperimentalMode();
+  roadCurvature = frogpilotPlan.getRoadCurvature();
 
   hideBottomIcons = selfdriveState.getAlertSize() != cereal::SelfdriveState::AlertSize::NONE;
   hideBottomIcons |= frogpilotSelfdriveState.getAlertSize() != cereal::FrogPilotSelfdriveState::AlertSize::NONE;
+
+  if (cscTraining) {
+    if (!glowTimer.isValid()) {
+      glowTimer.start();
+    }
+  } else {
+    glowTimer.invalidate();
+  }
 }
 
 void FrogPilotAnnotatedCameraWidget::mousePressEvent(QMouseEvent *mouseEvent) {
@@ -71,6 +86,14 @@ void FrogPilotAnnotatedCameraWidget::paintFrogPilotWidgets(QPainter &p, UIState 
   } else {
     compassPosition.setX(0);
     compassPosition.setY(0);
+  }
+
+  if (!(signalStyle == "static" && blinkerLeft) && frogpilot_toggles.value("csc_status").toBool()) {
+    if (cscTraining) {
+      paintCurveSpeedControlTraining(p);
+    } else if (isCruiseSet && cscControllingSpeed) {
+      paintCurveSpeedControl(p);
+    }
   }
 }
 
@@ -222,6 +245,64 @@ void FrogPilotAnnotatedCameraWidget::paintCompass(QPainter &p) {
   p.setBrush(whiteColor());
   p.setPen(Qt::NoPen);
   p.drawPolygon(triangle);
+
+  p.restore();
+}
+
+void FrogPilotAnnotatedCameraWidget::paintCurveSpeedControl(QPainter &p) {
+  p.save();
+
+  QRect curveSpeedRect(QPoint(setSpeedRect.right() + UI_BORDER_SIZE, setSpeedRect.top()), QSize(defaultSize.width() * 1.25, defaultSize.width() * 1.25));
+
+  QPixmap &curveSpeedImage = roadCurvature < 0 ? curveSpeedIcon : curveSpeedIconFlipped;
+  QSize curveSpeedSize = curveSpeedImage.size();
+  QPoint curveSpeedPoint = QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, curveSpeedSize, curveSpeedRect).topLeft();
+
+  p.setOpacity(1.0);
+
+  QRect cscRect(curveSpeedRect.topLeft() + QPoint(0, curveSpeedRect.height() + 10), QSize(curveSpeedRect.width(), 100));
+  p.setBrush(blueColor(166));
+  p.setFont(InterFont(45, QFont::Bold));
+  p.setPen(QPen(blueColor(), 10));
+  p.drawRoundedRect(cscRect, 24, 24);
+  p.setPen(QPen(whiteColor(), 6));
+  p.drawText(cscRect.adjusted(20, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, QString::number(std::nearbyint(fmin(speed, cscSpeed * speedConversion))) + speedUnit);
+  p.drawPixmap(curveSpeedPoint, curveSpeedImage);
+
+  p.restore();
+}
+
+void FrogPilotAnnotatedCameraWidget::paintCurveSpeedControlTraining(QPainter &p) {
+  p.save();
+
+  qreal phase = (glowTimer.elapsed() % 2000) / 2000.0 * 2 * M_PI;
+  qreal alphaFactor = 0.5 + 0.5 * sin(phase);
+
+  QColor glowColor = blueColor();
+  glowColor.setAlphaF(0.3 + 0.7 * alphaFactor);
+
+  int glowWidth = 8 + static_cast<int>(2 * alphaFactor);
+
+  QRect curveSpeedRect(QPoint(setSpeedRect.right() + UI_BORDER_SIZE, setSpeedRect.top()), QSize(defaultSize.width() * 1.25, defaultSize.width() * 1.25));
+
+  QPixmap &curveSpeedImage = roadCurvature < 0 ? curveSpeedIcon : curveSpeedIconFlipped;
+  QSize curveSpeedSize = curveSpeedImage.size();
+  QPoint curveSpeedPoint = QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, curveSpeedSize, curveSpeedRect).topLeft();
+
+  p.setOpacity(1.0);
+
+  p.setBrush(blackColor(166));
+  p.setPen(QPen(glowColor, glowWidth));
+  p.drawRoundedRect(curveSpeedRect, 24, 24);
+  p.drawPixmap(curveSpeedPoint, curveSpeedImage);
+  p.setBrush(blackColor(166));
+  p.setFont(InterFont(35, QFont::Bold));
+  p.setPen(QPen(blackColor(), 10));
+
+  QRect textRect(curveSpeedRect.topLeft() + QPoint(0, curveSpeedRect.height() + 10), QSize(curveSpeedRect.width(), 50));
+  p.drawRoundedRect(textRect, 24, 24);
+  p.setPen(QPen(whiteColor(), 6));
+  p.drawText(textRect.adjusted(20, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, "Training...");
 
   p.restore();
 }
