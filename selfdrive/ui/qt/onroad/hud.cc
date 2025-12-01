@@ -64,6 +64,12 @@ void HudRenderer::drawSetSpeed(QPainter &p, const QRect &surface_rect) {
   QSize set_speed_size = is_metric ? QSize(200, 204) : default_size;
 
   // FrogPilot variables
+  if (frogpilot_nvg->speedLimitHeight != 0) {
+    set_speed_size.rheight() += frogpilot_nvg->speedLimitHeight;
+    if (frogpilot_toggles.value("speed_limit_vienna").toBool()) {
+      set_speed_size.rwidth() = 200;
+    }
+  }
 
   QRect set_speed_rect(QPoint(60 + (default_size.width() - set_speed_size.width()) / 2, 45), set_speed_size);
 
