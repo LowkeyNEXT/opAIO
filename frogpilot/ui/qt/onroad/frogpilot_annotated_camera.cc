@@ -156,6 +156,8 @@ void FrogPilotAnnotatedCameraWidget::updateState(const UIState &s, const FrogPil
   cscTraining = frogpilotPlan.getCscTraining();
   experimentalMode = selfdriveState.getExperimentalMode();
   forceCoast = frogpilotCarState.getForceCoast();
+  laneWidthLeft = frogpilotPlan.getLaneWidthLeft();
+  laneWidthRight = frogpilotPlan.getLaneWidthRight();
   redLight = frogpilotPlan.getRedLight();
   roadCurvature = frogpilotPlan.getRoadCurvature();
   roadName = QString::fromStdString(params_memory.get("RoadName"));
@@ -254,6 +256,63 @@ void FrogPilotAnnotatedCameraWidget::paintFrogPilotWidgets(QPainter &p, UIState 
   if ((blinkerLeft || blinkerRight) && signalStyle != "None" && (standstillDuration == 0 || signalStyle != "static")) {
     paintTurnSignals(p);
   }
+}
+
+void FrogPilotAnnotatedCameraWidget::paintAdjacentPaths(QPainter &p) {
+  std::function<void(const QPolygonF&, bool, bool, float)> paintPath = [&](const QPolygonF &path, bool isLeft, bool isBlindSpot, float laneWidth) {
+    if (laneWidth == 0.0f) {
+      return;
+    }
+
+    p.save();
+
+    QLinearGradient gradient(0, height(), 0, 0);
+    if (isBlindSpot && frogpilot_toggles.value("blind_spot_path").toBool()) {
+      gradient.setColorAt(0.0f, QColor::fromHslF(0.0f, 0.75f, 0.5f, 0.4f));
+      gradient.setColorAt(0.5f, QColor::fromHslF(0.0f, 0.75f, 0.5f, 0.35f));
+      gradient.setColorAt(1.0f, QColor::fromHslF(0.0f, 0.75f, 0.5f, 0.0f));
+    } else {
+      float ratio = std::clamp(laneWidth / frogpilot_toggles.value("lane_detection_width").toDouble(), 0.0, 1.0);
+      float hue = (ratio * ratio) * (120.0f / 360.0f);
+
+      gradient.setColorAt(0.0f, QColor::fromHslF(hue, 0.75f, 0.5f, 0.4f));
+      gradient.setColorAt(0.5f, QColor::fromHslF(hue, 0.75f, 0.5f, 0.35f));
+      gradient.setColorAt(1.0f, QColor::fromHslF(hue, 0.75f, 0.5f, 0.0f));
+    }
+
+    p.setBrush(gradient);
+    p.drawPolygon(path);
+
+    if (frogpilot_toggles.value("adjacent_path_metrics").toBool()) {
+      QString text;
+      if (isBlindSpot && frogpilot_toggles.value("blind_spot_path").toBool()) {
+        text = tr("Vehicle in blind spot");
+      } else {
+        text = QString::number(laneWidth * distanceConversion, 'f', 2) + leadDistanceUnit;
+      }
+
+      int midIndex = path.size() / 2;
+      QPointF anchorPoint = isLeft ? path[midIndex / 2] : path[midIndex + (path.size() - midIndex) / 2];
+
+      p.setFont(InterFont(45, QFont::DemiBold));
+      QFontMetrics metrics(p.font());
+
+      int textXPosition = isLeft ? anchorPoint.x() - metrics.horizontalAdvance(text) : anchorPoint.x();
+      int textYPosition = anchorPoint.y() - metrics.height() / 2 + metrics.ascent();
+
+      QPainterPath textPath;
+      textPath.addText(textXPosition, textYPosition, p.font(), text);
+      p.strokePath(textPath, QPen(Qt::black, 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+
+      p.setPen(whiteColor());
+      p.drawText(textXPosition, textYPosition, text);
+    }
+
+    p.restore();
+  };
+
+  paintPath(track_adjacent_vertices[0], true, blindspotLeft, laneWidthLeft);
+  paintPath(track_adjacent_vertices[1], false, blindspotRight, laneWidthRight);
 }
 
 void FrogPilotAnnotatedCameraWidget::paintBlindSpotPath(QPainter &p) {
