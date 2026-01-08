@@ -15,6 +15,7 @@ struct FrogPilotUIScene {
   bool reverse;
   bool standstill;
 
+  int conditional_status;
   int started_timer;
 
   QJsonObject frogpilot_toggles;
