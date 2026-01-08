@@ -53,6 +53,7 @@ private:
   void paintCurveSpeedControl(QPainter &p);
   void paintCurveSpeedControlTraining(QPainter &p);
   void paintLongitudinalPaused(QPainter &p);
+  void paintPedalIcons(QPainter &p);
   void paintRadarTracks(QPainter &p);
   void paintRoadName(QPainter &p);
   void paintStandstillTimer(QPainter &p);
@@ -64,6 +65,7 @@ private:
   bool blindspotRight;
   bool blinkerLeft;
   bool blinkerRight;
+  bool brakeLights;
   bool cscControllingSpeed;
   bool cscTraining;
   bool experimentalMode;
@@ -78,6 +80,7 @@ private:
   int signalWidth;
   int totalFrames;
 
+  float accelerationEgo;
   float cscSpeed;
   float distanceConversion;
   float roadCurvature;
@@ -95,8 +98,10 @@ private:
   QElapsedTimer glowTimer;
   QElapsedTimer standstillTimer;
 
+  QPixmap brakePedalImg;
   QPixmap curveSpeedIcon;
   QPixmap curveSpeedIconFlipped;
+  QPixmap gasPedalImg;
   QPixmap pausedIcon;
   QPixmap speedIcon;
   QPixmap stopSignImg;

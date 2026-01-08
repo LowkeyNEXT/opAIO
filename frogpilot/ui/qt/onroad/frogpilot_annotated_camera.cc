@@ -5,8 +5,10 @@ FrogPilotAnnotatedCameraWidget::FrogPilotAnnotatedCameraWidget(QWidget *parent) 
 
   QSize iconSize(img_size / 4, img_size / 4);
 
+  brakePedalImg = loadPixmap("../../frogpilot/assets/other_images/brake_pedal.png", {btn_size, btn_size});
   curveSpeedIcon = loadPixmap("../../frogpilot/assets/other_images/curve_speed.png", {btn_size, btn_size});
   curveSpeedIconFlipped = curveSpeedIcon.transformed(QTransform().scale(-1, 1));
+  gasPedalImg = loadPixmap("../../frogpilot/assets/other_images/gas_pedal.png", {btn_size, btn_size});
   pausedIcon = loadPixmap("../../frogpilot/assets/other_images/paused_icon.png", {widget_size, widget_size});
   speedIcon = loadPixmap("../../frogpilot/assets/other_images/speed_icon.png", {widget_size, widget_size});
   stopSignImg = loadPixmap("../../frogpilot/assets/other_images/stop_sign.png", {btn_size, btn_size});
@@ -143,10 +145,12 @@ void FrogPilotAnnotatedCameraWidget::updateState(const UIState &s, const FrogPil
     speedConversionMetrics = MS_TO_MPH;
   }
 
+  accelerationEgo = carState.getAEgo();
   blindspotLeft = carState.getLeftBlindspot();
   blindspotRight = carState.getRightBlindspot();
   blinkerLeft = carState.getLeftBlinker();
   blinkerRight = carState.getRightBlinker();
+  brakeLights = frogpilotCarState.getBrakeLights();
   cscControllingSpeed = frogpilotPlan.getCscControllingSpeed();
   cscSpeed = frogpilotPlan.getCscSpeed();
   cscTraining = frogpilotPlan.getCscTraining();
@@ -225,6 +229,10 @@ void FrogPilotAnnotatedCameraWidget::paintFrogPilotWidgets(QPainter &p, UIState 
 
   if (!hideBottomIcons && (forceCoast)) {
     paintLongitudinalPaused(p);
+  }
+
+  if (frogpilot_toggles.value("pedals_on_ui").toBool()) {
+    paintPedalIcons(p);
   }
 
   if (frogpilot_toggles.value("radar_tracks").toBool()) {
@@ -484,6 +492,32 @@ void FrogPilotAnnotatedCameraWidget::paintLongitudinalPaused(QPainter &p) {
   p.drawPixmap(longitudinalWidget, speedIcon);
   p.setOpacity(0.75);
   p.drawPixmap(longitudinalWidget, pausedIcon);
+
+  p.restore();
+}
+
+void FrogPilotAnnotatedCameraWidget::paintPedalIcons(QPainter &p) {
+  p.save();
+
+  float brakeOpacity = 1.0f;
+  float gasOpacity = 1.0f;
+
+  if (frogpilot_toggles.value("dynamic_pedals_on_ui").toBool()) {
+    brakeOpacity = frogpilot_scene.standstill ? 1.0f : accelerationEgo < -0.25f ? std::max(0.25f, std::abs(accelerationEgo)) : 0.25f;
+    gasOpacity = std::max(0.25f, accelerationEgo);
+  } else if (frogpilot_toggles.value("static_pedals_on_ui").toBool()) {
+    brakeOpacity = frogpilot_scene.standstill || brakeLights || accelerationEgo < -0.25f ? 1.0f : 0.25f;
+    gasOpacity = accelerationEgo > 0.25 ? 1.0f : 0.25f;
+  }
+
+  int startX = experimentalButtonPosition.x();
+  int startY = experimentalButtonPosition.y() + btn_size + UI_BORDER_SIZE;
+
+  p.setOpacity(brakeOpacity);
+  p.drawPixmap(startX, startY, brakePedalImg);
+
+  p.setOpacity(gasOpacity);
+  p.drawPixmap(startX + btn_size / 2, startY, gasPedalImg);
 
   p.restore();
 }
