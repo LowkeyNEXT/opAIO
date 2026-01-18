@@ -37,8 +37,8 @@ class CarControllerParams:
       self.STEER_DRIVER_ALLOWANCE = 250
       self.STEER_DRIVER_MULTIPLIER = 2
       self.STEER_THRESHOLD = 250
-      self.STEER_DELTA_UP = 3
-      self.STEER_DELTA_DOWN = 8
+      self.STEER_DELTA_UP = 3  # Increased from 2 for faster torque ramp-up
+      self.STEER_DELTA_DOWN = 8  # Increased from 3 for faster torque ramp-down
 
     # To determine the limit for your car, find the maximum value that the stock LKAS will request.
     # If the max stock LKAS request is <384, add your car to this list.

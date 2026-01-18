@@ -1,11 +1,11 @@
 #include "safety_hyundai_common.h"
 
 const SteeringLimits HYUNDAI_CANFD_STEERING_LIMITS = {
-  .max_steer = 409,
+  .max_steer = 409,  // Increased from 330 for better steering authority
   .max_rt_delta = 112,
   .max_rt_interval = 250000,
-  .max_rate_up = 3,
-  .max_rate_down = 8,
+  .max_rate_up = 3,  // Increased from 2 for faster torque ramp-up
+  .max_rate_down = 8,  // Increased from 3 for faster torque ramp-down
   .driver_torque_allowance = 250,
   .driver_torque_factor = 2,
   .type = TorqueDriverLimited,
