@@ -224,39 +224,64 @@ jobs:
           fi
           echo "========================================="
 
-      - name: Setup Python and Dependencies
+      - name: Setup Build Environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip scons libffi-dev libcapnp-dev
-          pip3 install --upgrade pip
-          pip3 install scons pycryptodome numpy pyyaml
-          # Install pycapnp separately as it may have build requirements
-          pip3 install pycapnp || echo "⚠️  pycapnp installation failed, continuing..."
+          sudo apt-get install -y \
+            build-essential \
+            clang \
+            git \
+            curl \
+            libffi-dev \
+            libssl-dev \
+            libbz2-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libreadline-dev \
+            libsqlite3-dev \
+            libzmq3-dev \
+            llvm \
+            tk-dev \
+            python3-dev \
+            python3-pip \
+            libcapnp-dev \
+            capnproto \
+            libarchive-dev \
+            qt5-default \
+            libqt5svg5-dev \
+            libqt5serialport5-dev \
+            qtmultimedia5-dev \
+            libusb-1.0-0-dev \
+            libblas-dev \
+            liblapack-dev \
+            gfortran \
+            scons
+          
+          pip3 install --upgrade pip setuptools wheel
+          pip3 install scons pycryptodome numpy pyyaml Cython pycapnp pyzmq
 
-      - name: Compile Modified Files
+      - name: Full Compilation
         run: |
           echo "========================================="
-          echo "Compiling modified files..."
+          echo "Starting full FrogPilot compilation..."
           echo "========================================="
           
-          # Compile panda safety files
-          if git diff --name-only HEAD~5 | grep -q "panda/board/safety"; then
-            echo "Compiling panda safety files..."
-            cd panda && scons -j$(nproc) || {
-              echo "⚠️  Panda compilation failed, but continuing..."
-            }
-            cd ..
-          fi
+          # Run full scons build
+          scons -j$(nproc) || {
+            echo "⚠️  Full compilation failed, attempting to continue..."
+            exit 1
+          }
           
-          # Compile locationd if modified
-          if git diff --name-only HEAD~5 | grep -q "selfdrive/locationd"; then
-            echo "Compiling locationd..."
-            scons -j$(nproc) selfdrive/locationd/ || {
-              echo "⚠️  locationd compilation failed, but continuing..."
-            }
-          fi
-          
-          echo "Compilation check completed."
+          echo "========================================="
+          echo "Compilation completed successfully!"
+          echo "========================================="
+
+      - name: Commit Compiled Files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "Compile FrogPilot" || echo "No changes to commit"
 
       - name: Push changes
         env:
