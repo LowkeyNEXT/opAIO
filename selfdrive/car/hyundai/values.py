@@ -33,7 +33,7 @@ class CarControllerParams:
       self.STEER_DELTA_UP = 10 if vEgoRaw < 11. else 2
       self.STEER_DELTA_DOWN = 10 if vEgoRaw < 11. else 3
     elif CP.carFingerprint in CANFD_CAR:
-      self.STEER_MAX = 270
+      self.STEER_MAX = 409  # Increased from 270 to match panda safety max_steer
       self.STEER_DRIVER_ALLOWANCE = 250
       self.STEER_DRIVER_MULTIPLIER = 2
       self.STEER_THRESHOLD = 250
