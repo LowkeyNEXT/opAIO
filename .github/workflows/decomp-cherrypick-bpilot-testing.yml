@@ -218,7 +218,7 @@ jobs:
             libcapnp-dev \
             capnproto \
             libarchive-dev \
-            qt5-default \
+            qtbase5-dev \
             libqt5svg5-dev \
             libqt5serialport5-dev \
             qtmultimedia5-dev \
