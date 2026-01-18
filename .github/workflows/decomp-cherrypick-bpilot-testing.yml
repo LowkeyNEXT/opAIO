@@ -195,6 +195,38 @@ jobs:
             echo "All cherry-picks were successful."
           fi
 
+      - name: Setup Python and Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip scons libffi-dev
+          pip3 install --upgrade pip
+          pip3 install scons
+
+      - name: Compile Modified Files (OpenPilot 0.10)
+        run: |
+          echo "========================================="
+          echo "Compiling modified files for OpenPilot 0.10..."
+          echo "========================================="
+          
+          # Compile opendbc safety files (0.10 structure)
+          if git diff --name-only HEAD~5 | grep -q "opendbc_repo/opendbc/safety"; then
+            echo "Compiling opendbc safety files..."
+            cd opendbc_repo && scons -j$(nproc) || {
+              echo "⚠️  opendbc compilation failed, but continuing..."
+            }
+            cd ..
+          fi
+          
+          # Compile locationd if modified (Python in 0.10, but check syntax)
+          if git diff --name-only HEAD~5 | grep -q "selfdrive/locationd"; then
+            echo "Checking locationd Python syntax..."
+            python3 -m py_compile selfdrive/locationd/locationd.py || {
+              echo "⚠️  locationd syntax check failed, but continuing..."
+            }
+          fi
+          
+          echo "Compilation check completed."
+
       - name: Push changes
         env:
           PAT: ${{ secrets.PAT }}

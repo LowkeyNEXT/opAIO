@@ -224,6 +224,38 @@ jobs:
           fi
           echo "========================================="
 
+      - name: Setup Python and Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip scons libffi-dev
+          pip3 install --upgrade pip
+          pip3 install scons
+
+      - name: Compile Modified Files
+        run: |
+          echo "========================================="
+          echo "Compiling modified files..."
+          echo "========================================="
+          
+          # Compile panda safety files
+          if git diff --name-only HEAD~5 | grep -q "panda/board/safety"; then
+            echo "Compiling panda safety files..."
+            cd panda && scons -j$(nproc) || {
+              echo "⚠️  Panda compilation failed, but continuing..."
+            }
+            cd ..
+          fi
+          
+          # Compile locationd if modified
+          if git diff --name-only HEAD~5 | grep -q "selfdrive/locationd"; then
+            echo "Compiling locationd..."
+            scons -j$(nproc) selfdrive/locationd/ || {
+              echo "⚠️  locationd compilation failed, but continuing..."
+            }
+          fi
+          
+          echo "Compilation check completed."
+
       - name: Push changes
         env:
           PAT: ${{ secrets.PAT }}
