@@ -171,7 +171,7 @@ jobs:
             "6d433e8477287b133dbcb0e42e0d9d481ebfad21" #Faster Auto Tune
             "97613232de710e2abbc16dd9403aae8922aae8da" #Fast Boot
             "cb334c81d326ba3726f7ba01bec30f3d04559928" #Stock Icons
-            "6fd8719c29d1e16dad9e3ec3d4ceec2f9a17b8d9" #HKG CAN-FD Increased Torque for OpenPilot 0.10
+            "d7b6d1477bce2ab4b1e69f79865fc08d580c39c9" #HKG CAN-FD Increased Torque for 0.10 (with STEER_MAX fix)
             # "91d1cc6c4f4fb65568024d3c8dcafeaa8768714c" #Fix locationd temporary error (0.10) - AVAILABLE BUT NOT ENABLED
           )
           failed_cherry_picks=()

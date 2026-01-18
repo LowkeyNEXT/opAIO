@@ -172,7 +172,7 @@ jobs:
             "97613232de710e2abbc16dd9403aae8922aae8da" #Fast Boot
             "cb334c81d326ba3726f7ba01bec30f3d04559928" #Stock Icons
             "28144bfbc48362771d138841e430879af15a4ea0" #Fix locationd temporary error false positives
-            "2e77eec52210add98b0398729dbbf0f97daebd3a" #HKG CAN-FD Increased Torque (Clean Version)
+            "19cfa999d97c70c92a5aca59827a020581111b5d" #HKG CAN-FD Increased Torque (with STEER_MAX fix)
           )
           failed_cherry_picks=()
           successful_cherry_picks=()
