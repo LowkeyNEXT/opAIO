@@ -23,7 +23,7 @@ const double MAX_RESET_TRACKER = 5.0;
 const double SANE_GPS_UNCERTAINTY = 1500.0; // m
 const double INPUT_INVALID_THRESHOLD = 0.5; // same as reset tracker
 const double RESET_TRACKER_DECAY = 0.99995;
-const double DECAY = 0.9993; // ~10 secs to resume after a bad input
+const double DECAY = 0.99; // ~1.4 secs to resume after a bad input (reduced from 0.9993 to prevent false locationd temporary errors)
 const double MAX_FILTER_REWIND_TIME = 0.8; // s
 const double YAWRATE_CROSS_ERR_CHECK_FACTOR = 30;
 
