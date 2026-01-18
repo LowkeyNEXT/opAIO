@@ -229,7 +229,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-pip scons libffi-dev
           pip3 install --upgrade pip
-          pip3 install scons
+          pip3 install scons pycryptodome numpy scipy capnp pyyaml
 
       - name: Compile Modified Files
         run: |
