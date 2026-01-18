@@ -227,9 +227,11 @@ jobs:
       - name: Setup Python and Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip scons libffi-dev
+          sudo apt-get install -y python3-pip scons libffi-dev libcapnp-dev
           pip3 install --upgrade pip
-          pip3 install scons pycryptodome numpy scipy capnp pyyaml
+          pip3 install scons pycryptodome numpy pyyaml
+          # Install pycapnp separately as it may have build requirements
+          pip3 install pycapnp || echo "⚠️  pycapnp installation failed, continuing..."
 
       - name: Compile Modified Files
         run: |
