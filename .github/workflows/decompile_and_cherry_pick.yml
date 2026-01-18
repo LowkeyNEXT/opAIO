@@ -172,6 +172,7 @@ jobs:
             6d433e8477287b133dbcb0e42e0d9d481ebfad21 #Faster Auto Tune
             97613232de710e2abbc16dd9403aae8922aae8da #Fast Boot
             cb334c81d326ba3726f7ba01bec30f3d04559928 #Stock Icons
+            28144bfbc48362771d138841e430879af15a4ea0 #Fix locationd temporary error false positives
           )
           failed_cherry_picks=()
           for commit in "${cherry_picks[@]}"; do
