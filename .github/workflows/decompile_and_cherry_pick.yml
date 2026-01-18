@@ -168,32 +168,61 @@ jobs:
       - name: Cherry-pick additional commits
         run: |
           cherry_picks=(
-            7982f09ce484547614188bc13b9444f7d0101de8 #HKG Steer Enhancements
-            6d433e8477287b133dbcb0e42e0d9d481ebfad21 #Faster Auto Tune
-            97613232de710e2abbc16dd9403aae8922aae8da #Fast Boot
-            cb334c81d326ba3726f7ba01bec30f3d04559928 #Stock Icons
-            28144bfbc48362771d138841e430879af15a4ea0 #Fix locationd temporary error false positives
+            "6d433e8477287b133dbcb0e42e0d9d481ebfad21" #Faster Auto Tune
+            "97613232de710e2abbc16dd9403aae8922aae8da" #Fast Boot
+            "cb334c81d326ba3726f7ba01bec30f3d04559928" #Stock Icons
+            "28144bfbc48362771d138841e430879af15a4ea0" #Fix locationd temporary error false positives
+            # "7982f09ce484547614188bc13b9444f7d0101de8" #HKG Steer Enhancements - DISABLED: Conflicts with current FrogPilot base, needs manual update
           )
           failed_cherry_picks=()
+          successful_cherry_picks=()
+          
           for commit in "${cherry_picks[@]}"; do
+            # Skip comments
+            if [[ $commit == \#* ]]; then
+              continue
+            fi
+            
             echo "Attempting to cherry-pick commit: $commit"
-            if git cherry-pick $commit; then
-              echo "Successfully cherry-picked commit: $commit"
+            commit_msg=$(git log -1 --format=%s $commit 2>/dev/null || echo "Unknown commit")
+            
+            if git cherry-pick $commit 2>&1; then
+              echo "✓ Successfully cherry-picked: $commit ($commit_msg)"
+              successful_cherry_picks+=("$commit: $commit_msg")
             else
-              echo "Failed to cherry-pick commit: $commit"
-              git cherry-pick --abort
-              failed_cherry_picks+=("$commit")
+              echo "✗ Failed to cherry-pick: $commit ($commit_msg)"
+              echo "Conflict details:"
+              git status --short 2>&1 || true
+              git cherry-pick --abort 2>&1 || true
+              failed_cherry_picks+=("$commit: $commit_msg")
             fi
             echo "---"
           done
           
-          if [ ${#failed_cherry_picks[@]} -ne 0 ]; then
-            echo "The following cherry-picks failed:"
-            printf '%s\n' "${failed_cherry_picks[@]}"
-            echo "Please review these commits manually."
-          else
-            echo "All cherry-picks were successful."
+          echo ""
+          echo "========================================="
+          echo "Cherry-pick Summary:"
+          echo "========================================="
+          echo "Successful: ${#successful_cherry_picks[@]}"
+          echo "Failed: ${#failed_cherry_picks[@]}"
+          echo ""
+          
+          if [ ${#successful_cherry_picks[@]} -gt 0 ]; then
+            echo "✓ Successfully applied commits:"
+            printf '  - %s\n' "${successful_cherry_picks[@]}"
+            echo ""
           fi
+          
+          if [ ${#failed_cherry_picks[@]} -ne 0 ]; then
+            echo "✗ Failed cherry-picks (workflow will continue):"
+            printf '  - %s\n' "${failed_cherry_picks[@]}"
+            echo ""
+            echo "⚠️  These commits need manual review and updating in Z-Tweaks-2025"
+            echo "The workflow will continue and push the successfully applied commits."
+          else
+            echo "✓ All cherry-picks were successful!"
+          fi
+          echo "========================================="
 
       - name: Push changes
         env:
