@@ -57,6 +57,7 @@ def generate(env):
   env["CYTHON"] = "cythonize"
   env["CYTHONCOM"] = "$CYTHON $CYTHONFLAGS $SOURCE"
   env["CYTHONCFILESUFFIX"] = ".cpp"
+  env["CYTHONFLAGS"] = "--cplus"
 
   c_file, _ = SCons.Tool.createCFileBuilders(env)
 
