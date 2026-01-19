@@ -70,7 +70,11 @@ sudo apt-get install -y \
   gfortran \
   scons \
   gcc-arm-none-eabi \
-  gcc-arm-linux-gnueabihf
+  gcc-arm-linux-gnueabihf \
+  opencl-headers \
+  ocl-icd-opencl-dev \
+  libeigen3-dev \
+  cython3
 
 echo "✓ System packages installed"
 
