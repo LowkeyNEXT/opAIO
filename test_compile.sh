@@ -84,6 +84,9 @@ echo "Installing Python packages..."
 pip3 install --break-system-packages --upgrade pip setuptools wheel
 pip3 install --break-system-packages scons pycryptodome numpy pyyaml Cython pycapnp pyzmq
 
+# Create cythonize symlink for Ubuntu 24.04 compatibility
+sudo ln -sf /usr/bin/cython3 /usr/bin/cythonize
+
 echo "✓ Python packages installed"
 
 # Show versions
