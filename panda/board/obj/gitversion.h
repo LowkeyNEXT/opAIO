@@ -1,1 +1,1 @@
-const uint8_t gitversion[] = "DEV-422e051c-DEBUG";
+const uint8_t gitversion[] = "DEV-dfe5467c-DEBUG";
