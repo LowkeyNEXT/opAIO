@@ -91,6 +91,15 @@ sudo ln -sf /usr/bin/cython3 /usr/bin/cythonize
 echo ""
 echo "Fixing line endings in Python scripts..."
 find . -name "*.py" -type f -exec dos2unix {} \; 2>/dev/null || true
+find . -name "lat_mpc.py" -type f -exec dos2unix {} \; 2>/dev/null || true
+find . -name "live_kf.py" -type f -exec dos2unix {} \; 2>/dev/null || true
+find . -name "car_kf.py" -type f -exec dos2unix {} \; 2>/dev/null || true
+
+# Fix shebang lines to avoid Windows line ending issues
+echo ""
+echo "Fixing shebang lines..."
+sed -i 's|#!/usr/bin/env python3|#!/usr/bin/python3|g' selfdrive/locationd/models/live_kf.py
+sed -i 's|#!/usr/bin/env python3|#!/usr/bin/python3|g' selfdrive/locationd/models/car_kf.py
 
 echo "✓ Python packages installed"
 
