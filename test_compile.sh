@@ -64,8 +64,8 @@ sudo apt-get install -y \
   libqt5svg5-dev \
   libqt5serialport5-dev \
   qtmultimedia5-dev \
-  libqt5location5-dev \
-  libqt5positioning5-dev \
+  qtpositioning5-dev \
+  libqt5location5 \
   libusb-1.0-0-dev \
   libblas-dev \
   liblapack-dev \
