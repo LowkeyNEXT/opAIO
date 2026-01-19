@@ -82,10 +82,15 @@ echo "✓ System packages installed"
 echo ""
 echo "Installing Python packages..."
 pip3 install --break-system-packages --upgrade pip setuptools wheel
-pip3 install --break-system-packages scons pycryptodome numpy pyyaml Cython pycapnp pyzmq
+pip3 install --break-system-packages scons pycryptodome numpy pyyaml Cython pycapnp pyzmq casadi
 
 # Create cythonize symlink for Ubuntu 24.04 compatibility
 sudo ln -sf /usr/bin/cython3 /usr/bin/cythonize
+
+# Fix Windows line endings in Python scripts
+echo ""
+echo "Fixing line endings in Python scripts..."
+find . -name "*.py" -type f -exec dos2unix {} \; 2>/dev/null || true
 
 echo "✓ Python packages installed"
 
