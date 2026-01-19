@@ -68,7 +68,9 @@ sudo apt-get install -y \
   libblas-dev \
   liblapack-dev \
   gfortran \
-  scons
+  scons \
+  gcc-arm-none-eabi \
+  gcc-arm-linux-gnueabihf
 
 echo "✓ System packages installed"
 
