@@ -226,7 +226,9 @@ jobs:
             libblas-dev \
             liblapack-dev \
             gfortran \
-            scons
+            scons \
+            gcc-arm-none-eabi \
+            gcc-arm-linux-gnueabihf
           
           pip3 install --break-system-packages --upgrade pip setuptools wheel
           pip3 install --break-system-packages scons pycryptodome numpy pyyaml Cython pycapnp pyzmq
