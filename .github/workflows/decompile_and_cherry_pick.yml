@@ -263,7 +263,9 @@ jobs:
             opencl-headers \
             ocl-icd-opencl-dev \
             libeigen3-dev \
-            cython3
+            cython3 \
+            libgles2-mesa-dev \
+            libgl1-mesa-dev
           
           pip3 install --break-system-packages --upgrade pip setuptools wheel
           pip3 install --break-system-packages scons pycryptodome numpy pyyaml Cython pycapnp pyzmq casadi

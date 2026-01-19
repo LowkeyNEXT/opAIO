@@ -76,7 +76,9 @@ sudo apt-get install -y \
   opencl-headers \
   ocl-icd-opencl-dev \
   libeigen3-dev \
-  cython3
+  cython3 \
+  libgles2-mesa-dev \
+  libgl1-mesa-dev
 
 echo "✓ System packages installed"
 
