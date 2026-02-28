@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import datetime
 import json
-import os
 import time
 
 from cereal import messaging
@@ -104,7 +103,7 @@ def frogpilot_thread():
       if frogpilot_toggles.random_themes:
         theme_manager.update_active_theme(time_validated, frogpilot_toggles, randomize_theme=True)
 
-      if time_validated and is_url_pingable(os.environ.get("STATS_URL", "")):
+      if time_validated:
         send_stats()
 
     elif started and not started_previously:

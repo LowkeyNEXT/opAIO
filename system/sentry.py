@@ -1,5 +1,4 @@
 """Install exception handler for process crash."""
-import os
 import sentry_sdk
 import subprocess
 import traceback
@@ -16,9 +15,9 @@ from openpilot.frogpilot.common.frogpilot_variables import ERROR_LOGS_PATH, para
 
 class SentryProject(Enum):
   # python project
-  SELFDRIVE = os.environ.get("SENTRY_DSN", "")
+  SELFDRIVE = "https://7ba43fba4cfcf1a6c0eff83d40374e43@o4505034923769856.ingest.us.sentry.io/4505034930651136"
   # native project
-  SELFDRIVE_NATIVE = os.environ.get("SENTRY_DSN", "")
+  SELFDRIVE_NATIVE = "https://7ba43fba4cfcf1a6c0eff83d40374e43@o4505034923769856.ingest.us.sentry.io/4505034930651136"
 
 
 def report_tombstone(fn: str, message: str, contents: str) -> None:
@@ -119,7 +118,7 @@ def init(project: SentryProject) -> bool:
   short_branch = build_metadata.channel
 
   if short_branch in ["COMMA", "HEAD"]:
-    return
+    return False
   elif short_branch == "FrogPilot-Development":
     env = "Development"
   elif build_metadata.release_channel:

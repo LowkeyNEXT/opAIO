@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import io
+import dataclasses
 import json
 import math
 import numpy as np
@@ -20,12 +20,14 @@ import openpilot.system.sentry as sentry
 
 from cereal import log, messaging
 from opendbc.can.parser import CANParser
+from openpilot.common.params import Params, ParamKeyType
 from openpilot.common.realtime import DT_DMON, DT_HW
 from openpilot.selfdrive.car.toyota.carcontroller import LOCK_CMD
 from openpilot.system.hardware import HARDWARE
+from openpilot.system.version import get_build_metadata
 from panda import Panda
 
-from openpilot.frogpilot.common.frogpilot_variables import DISCORD_WEBHOOK_URL_REPORT, EARTH_RADIUS, ERROR_LOGS_PATH, KONIK_PATH, MAPD_PATH, MAPS_PATH, params, params_cache, params_memory
+from openpilot.frogpilot.common.frogpilot_variables import EARTH_RADIUS, ERROR_LOGS_PATH, EXCLUDED_KEYS, FROGPILOT_API, KONIK_PATH, MAPD_PATH, MAPS_PATH, GearShifter, frogpilot_default_params, params, params_cache, params_memory, update_frogpilot_toggles
 
 running_threads = {}
 
@@ -112,44 +114,33 @@ def calculate_road_curvature(modelData, v_ego):
   return predicted_lateral_acc / max(v_ego, 1)**2, max(time_to_curve, 1)
 
 def capture_report(discord_user, report, frogpilot_toggles):
-  if not DISCORD_WEBHOOK_URL_REPORT:
+  if not is_url_pingable(FROGPILOT_API):
     return
+
+  api_token, build_metadata, device_type, dongle_id = get_frogpilot_api_info()
 
   error_file_path = ERROR_LOGS_PATH / "error.txt"
   error_content = "No error log found."
   if error_file_path.exists():
     error_content = error_file_path.read_text()[:1000]
 
-  toggles_bytes = io.BytesIO(json.dumps(frogpilot_toggles, indent=2).encode("utf-8"))
-
-  message = (
-    f"**🚨 New Error Report**\n\n"
-    f"**User:** `{discord_user}`\n\n"
-    f"**Report:**\n"
-    f"```{report}```\n"
-    f"**Error Log:**\n"
-    f"```{error_content}```\n"
-    f"**Toggle Settings:**\n"
-  )
+  payload = {
+    "api_token": api_token,
+    "build_metadata": build_metadata,
+    "device": device_type,
+    "discord_user": discord_user,
+    "error_content": error_content,
+    "frogpilot_dongle_id": dongle_id,
+    "frogpilot_toggles": frogpilot_toggles,
+    "report": report,
+  }
 
   try:
-    resp = requests.post(
-      DISCORD_WEBHOOK_URL_REPORT,
-      data={"content": message},
-      files={"file": ("frogpilot_toggles.json", toggles_bytes, "application/json")}
-    )
-    if resp.status_code not in (200, 204):
-      print(f"Discord notification failed: {resp.status_code} {resp.text}")
-      return
-
-    mention_resp = requests.post(
-      DISCORD_WEBHOOK_URL_REPORT,
-      json={"content": "<@&1198482895342411846>"}
-    )
-    if mention_resp.status_code not in (200, 204):
-      print(f"Discord mention failed: {mention_resp.status_code} {mention_resp.text}")
-  except Exception as exception:
-    print(f"Error sending Discord message: {exception}")
+    response = requests.post(f"{FROGPILOT_API}/discord/report", json=payload, headers={"Content-Type": "application/json", "User-Agent": "frogpilot-api/1.0"}, timeout=30)
+    response.raise_for_status()
+    print("Successfully sent error report!")
+  except requests.exceptions.RequestException as exception:
+    print(f"Error sending report: {exception}")
 
 def clean_model_name(name):
   return (
@@ -202,6 +193,14 @@ def flash_panda():
       sentry.capture_exception(exception)
 
   params_memory.remove("FlashPanda")
+
+def get_frogpilot_api_info():
+  api_token = params.get("FrogPilotApiToken", encoding="utf-8")
+  build_metadata = dataclasses.asdict(get_build_metadata())
+  device_type = HARDWARE.get_device_type()
+  dongle_id = params.get("FrogPilotDongleId", encoding="utf-8")
+
+  return api_token, build_metadata, device_type, dongle_id
 
 def get_lock_status(can_parser, can_sock):
   can_msgs = messaging.drain_sock_raw(can_sock, wait_for_one=True)

@@ -333,6 +333,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"ForceStops", PERSISTENT},
     {"ForceTorqueController", PERSISTENT},
     {"FPSCounter", PERSISTENT},
+    {"FrogPilotApiToken", PERSISTENT | DONT_LOG},
     {"FrogPilotCarParams", CLEAR_ON_MANAGER_START | CLEAR_ON_ONROAD_TRANSITION},
     {"FrogPilotCarParamsPersistent", PERSISTENT},
     {"FrogPilotDongleId", PERSISTENT | DONT_LOG},
