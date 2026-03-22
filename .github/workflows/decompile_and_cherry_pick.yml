@@ -237,6 +237,17 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+
+          for temp_file in \
+            frogpilot/third_party/certifi/core.py \
+            tools/install_python_dependencies.sh \
+            tools/install_ubuntu_dependencies.sh \
+            tools/ubuntu_setup.sh; do
+            if git cat-file -e "HEAD:$temp_file" 2>/dev/null; then
+              git restore --source=HEAD --staged --worktree -- "$temp_file"
+            fi
+          done
+
           git add -A
           staged_files="$(git diff --cached --name-only)"
           echo "Staged files:"
@@ -256,6 +267,9 @@ jobs:
                 if git cat-file -e "HEAD:$file" 2>/dev/null; then
                   echo "Restoring previously tracked version of oversized file: $file (${size} bytes)"
                   git restore --source=HEAD --staged --worktree -- "$file"
+                elif git cat-file -e "${compile_commit}:$file" 2>/dev/null; then
+                  echo "Restoring oversized file from prior compile commit: $file (${size} bytes)"
+                  git restore --source="${compile_commit}" --staged --worktree -- "$file"
                 else
                   echo "Refusing to commit oversized new file: $file (${size} bytes)"
                   oversized_files=1
