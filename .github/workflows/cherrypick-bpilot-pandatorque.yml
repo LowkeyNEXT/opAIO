@@ -19,7 +19,7 @@ jobs:
         run: git config --global core.symlinks false
 
       - name: Checkout repo without symlinks
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false

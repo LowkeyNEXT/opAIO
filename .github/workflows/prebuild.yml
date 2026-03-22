@@ -31,7 +31,7 @@ jobs:
           repo-token: ${{ secrets.PAT }}
           check-regexp: ^((?!.*(build master-ci).*).)*$
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: true
           ref: bp-BPilot-BANNABLE
