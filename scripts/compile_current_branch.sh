@@ -96,7 +96,11 @@ run_host_compile() {
 
 cleanup_generated_artifacts() {
   find "$ROOT_DIR" \
-    -path "$ROOT_DIR/.git" -prune -o \
+    -path "$ROOT_DIR/.git" -o \
+    -path "$ROOT_DIR/.git/*" -o \
+    -path "$ROOT_DIR/.venv" -o \
+    -path "$ROOT_DIR/.venv/*" \
+    -prune -o \
     -type f \( -name 'core' -o -name 'core.*' \) \
     -print -delete
 }
