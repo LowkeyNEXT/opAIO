@@ -9,11 +9,11 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 jobs:
   revert-commit:
-    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: [self-hosted, Linux, X64, compile, opaio]
     steps:
       - name: Configure Git to skip symlinks
         run: git config --global core.symlinks false
@@ -28,6 +28,11 @@ jobs:
         run: |
           git config --global user.email "55640145+BRid37@users.noreply.github.com"
           git config --global user.name "BRid37"
+
+      - name: Stage compile helper
+        run: |
+          cp scripts/compile_current_branch.sh "$RUNNER_TEMP/compile_current_branch.sh"
+          chmod +x "$RUNNER_TEMP/compile_current_branch.sh"
 
       - name: Ensure clean state and fetch all branches
         run: |
@@ -167,115 +172,58 @@ jobs:
 
       - name: Cherry-pick additional commits
         run: |
-          cherry_picks=(
-            "6d433e8477287b133dbcb0e42e0d9d481ebfad21" #Faster Auto Tune
-            "97613232de710e2abbc16dd9403aae8922aae8da" #Fast Boot
-            "cb334c81d326ba3726f7ba01bec30f3d04559928" #Stock Icons
-            "d7b6d1477bce2ab4b1e69f79865fc08d580c39c9" #HKG CAN-FD Increased Torque for 0.10 (with STEER_MAX fix)
-            # "91d1cc6c4f4fb65568024d3c8dcafeaa8768714c" #Fix locationd temporary error (0.10) - AVAILABLE BUT NOT ENABLED
-          )
+          cherry_picks=()
           failed_cherry_picks=()
+          successful_cherry_picks=()
+
+          if [ ${#cherry_picks[@]} -eq 0 ]; then
+            echo "No additional direct cherry-picks configured for bp-BPilot-BANNABLE-Testing."
+            echo "Translated 0.10.x tweaks should land on the testing branch history directly."
+          fi
+
           for commit in "${cherry_picks[@]}"; do
             echo "Attempting to cherry-pick commit: $commit"
-            if git cherry-pick $commit; then
-              echo "Successfully cherry-picked commit: $commit"
+            commit_msg=$(git log -1 --format=%s $commit 2>/dev/null || echo "Unknown commit")
+
+            if git cherry-pick $commit 2>&1; then
+              echo "✓ Successfully cherry-picked: $commit ($commit_msg)"
+              successful_cherry_picks+=("$commit: $commit_msg")
             else
-              echo "Failed to cherry-pick commit: $commit"
-              git cherry-pick --abort
-              failed_cherry_picks+=("$commit")
+              echo "✗ Failed to cherry-pick: $commit ($commit_msg)"
+              git status --short 2>&1 || true
+              git cherry-pick --abort 2>&1 || true
+              failed_cherry_picks+=("$commit: $commit_msg")
             fi
             echo "---"
           done
-          
+
+          echo ""
+          echo "========================================="
+          echo "Cherry-pick Summary:"
+          echo "========================================="
+          echo "Successful: ${#successful_cherry_picks[@]}"
+          echo "Failed: ${#failed_cherry_picks[@]}"
+          echo ""
+
+          if [ ${#successful_cherry_picks[@]} -gt 0 ]; then
+            echo "✓ Successfully applied commits:"
+            printf '  - %s\n' "${successful_cherry_picks[@]}"
+            echo ""
+          fi
+
           if [ ${#failed_cherry_picks[@]} -ne 0 ]; then
-            echo "The following cherry-picks failed:"
-            printf '%s\n' "${failed_cherry_picks[@]}"
-            echo "Please review these commits manually."
+            echo "✗ Failed cherry-picks (workflow will continue):"
+            printf '  - %s\n' "${failed_cherry_picks[@]}"
+            echo ""
+            echo "⚠️  These tweaks need translation or manual updates for the 0.10.x line."
           else
-            echo "All cherry-picks were successful."
+            echo "✓ No additional cherry-picks failed."
           fi
+          echo "========================================="
 
-      - name: Setup Build Environment
+      - name: Compile Current Branch
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            clang \
-            git \
-            curl \
-            libffi-dev \
-            libssl-dev \
-            libbz2-dev \
-            libncurses5-dev \
-            libncursesw5-dev \
-            libreadline-dev \
-            libsqlite3-dev \
-            libzmq3-dev \
-            llvm \
-            tk-dev \
-            python3-dev \
-            python3-pip \
-            libcapnp-dev \
-            capnproto \
-            libarchive-dev \
-            qtbase5-dev \
-            libqt5svg5-dev \
-            libqt5serialport5-dev \
-            qtmultimedia5-dev \
-            qtpositioning5-dev \
-            libqt5location5 \
-            libusb-1.0-0-dev \
-            libblas-dev \
-            liblapack-dev \
-            gfortran \
-            scons \
-            gcc-arm-none-eabi \
-            gcc-arm-linux-gnueabihf \
-            opencl-headers \
-            ocl-icd-opencl-dev \
-            libeigen3-dev \
-            cython3 \
-            libgles2-mesa-dev \
-            libgl1-mesa-dev
-          
-          pip3 install --break-system-packages --upgrade pip setuptools wheel
-          pip3 install --break-system-packages scons pycryptodome numpy pyyaml Cython pycapnp pyzmq casadi
-          
-          # Create cythonize symlink for Ubuntu 24.04 compatibility
-          sudo ln -sf /usr/bin/cython3 /usr/bin/cythonize
-          
-          # Fix Windows line endings in Python scripts
-          find . -name "*.py" -type f -exec dos2unix {} \; 2>/dev/null || true
-          find . -name "lat_mpc.py" -type f -exec dos2unix {} \; 2>/dev/null || true
-          find . -name "live_kf.py" -type f -exec dos2unix {} \; 2>/dev/null || true
-          find . -name "car_kf.py" -type f -exec dos2unix {} \; 2>/dev/null || true
-          
-          # Fix shebang lines to avoid Windows line ending issues
-          sed -i 's|#!/usr/bin/env python3|#!/usr/bin/python3|g' selfdrive/locationd/models/live_kf.py
-          sed -i 's|#!/usr/bin/env python3|#!/usr/bin/python3|g' selfdrive/locationd/models/car_kf.py
-
-      - name: Full Compilation (OpenPilot 0.10)
-        run: |
-          echo "========================================="
-          echo "Starting full OpenPilot 0.10 compilation..."
-          echo "========================================="
-
-          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
-
-          mkdir -p release
-          if [ ! -f release/files_common ]; then
-            : > release/files_common
-          fi
-          
-          # Run full scons build
-          scons -j$(nproc) || {
-            echo "⚠️  Full compilation failed, attempting to continue..."
-            exit 1
-          }
-          
-          echo "========================================="
-          echo "Compilation completed successfully!"
-          echo "========================================="
+          "$RUNNER_TEMP/compile_current_branch.sh"
 
       - name: Commit Compiled Files
         run: |
@@ -286,9 +234,9 @@ jobs:
 
       - name: Push changes
         env:
-          PAT: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           echo "Pushing changes to remote repository"
-          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
           git push origin temp-branch:bp-BPilot-BANNABLE-Testing --force
           echo "Push completed"
