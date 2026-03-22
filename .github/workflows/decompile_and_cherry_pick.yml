@@ -245,6 +245,21 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           echo "Pushing changes to remote repository"
+          git config http.version HTTP/1.1
+          git config http.lowSpeedLimit 1000
+          git config http.lowSpeedTime 60
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
-          git push origin temp-branch:bp-BPilot-BANNABLE --force
+          for attempt in 1 2 3; do
+            if git push origin temp-branch:bp-BPilot-BANNABLE --force; then
+              break
+            fi
+
+            if [ "$attempt" -eq 3 ]; then
+              echo "Push failed after ${attempt} attempts"
+              exit 1
+            fi
+
+            echo "Push attempt ${attempt} failed; retrying in 15 seconds"
+            sleep 15
+          done
           echo "Push completed"
