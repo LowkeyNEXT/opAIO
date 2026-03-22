@@ -336,10 +336,9 @@ prepare_frogpilot_tinygrad_flags() {
   local target="frogpilot/tinygrad_modeld/SConscript"
 
   [[ -f "$target" ]] || return 0
-  grep -q "DEV=LLVM IMAGE=0" "$target" || grep -q "FLOAT16=0 LLVM=1 LLVMOPT=1 JIT=2 BEAM=0 IMAGE=0" "$target" || return 0
+  grep -q "DEV=LLVM IMAGE=0" "$target" || grep -q "DEV=LLVM IMAGE=0 ORT=1" "$target" || return 0
   ensure_backup "$target"
-  perl -0pi -e "s/'DEV=LLVM IMAGE=0'/'FLOAT16=0 LLVM=1 LLVMOPT=1 JIT=2 BEAM=0 IMAGE=0 ORT=1'/g" "$target"
-  perl -0pi -e "s/'FLOAT16=0 LLVM=1 LLVMOPT=1 JIT=2 BEAM=0 IMAGE=0'/'FLOAT16=0 LLVM=1 LLVMOPT=1 JIT=2 BEAM=0 IMAGE=0 ORT=1'/g" "$target"
+  perl -0pi -e "s/'DEV=LLVM IMAGE=0'/'DEV=LLVM IMAGE=0 ORT=1'/g" "$target"
 }
 
 prepare_x86_screenrecorder_compat() {
