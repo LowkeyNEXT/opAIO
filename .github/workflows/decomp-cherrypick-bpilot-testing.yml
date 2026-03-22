@@ -230,6 +230,30 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
+          staged_files="$(git diff --cached --name-only)"
+          echo "Staged files:"
+          printf '%s\n' "$staged_files"
+
+          if printf '%s\n' "$staged_files" | rg -i '(^|/)(\.env|\.npmrc|\.pypirc|id_rsa|id_dsa|known_hosts|authorized_keys|.*\.(pem|key|p12|mobileprovision|kdbx))$|(^|/)(secret|secrets|token|tokens|credential|credentials)(/|$)'; then
+            echo "Refusing to commit suspicious secret-like files"
+            exit 1
+          fi
+
+          oversized_files=0
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            if [ -f "$file" ]; then
+              size="$(wc -c < "$file")"
+              if [ "$size" -ge 100000000 ]; then
+                echo "Refusing to commit oversized file: $file (${size} bytes)"
+                oversized_files=1
+              fi
+            fi
+          done <<< "$staged_files"
+          if [ "$oversized_files" -ne 0 ]; then
+            exit 1
+          fi
+
           git commit -m "Compile FrogPilot" || echo "No changes to commit"
 
       - name: Push changes
