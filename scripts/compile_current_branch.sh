@@ -6,7 +6,17 @@ if [[ "$(uname)" != "Linux" ]]; then
   exit 1
 fi
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null && pwd)"
+if [[ -n "${GITHUB_WORKSPACE:-}" ]]; then
+  ROOT_DIR="$GITHUB_WORKSPACE"
+else
+  ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null && pwd)"
+fi
+
+if [[ ! -d "$ROOT_DIR/.git" ]]; then
+  echo "Unable to locate repository root from GITHUB_WORKSPACE or script path: $ROOT_DIR"
+  exit 1
+fi
+
 cd "$ROOT_DIR"
 
 git config --global --add safe.directory "$ROOT_DIR"
