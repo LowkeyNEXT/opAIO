@@ -94,6 +94,13 @@ run_host_compile() {
   fi
 }
 
+cleanup_generated_artifacts() {
+  find "$ROOT_DIR" \
+    -path "$ROOT_DIR/.git" -prune -o \
+    -type f \( -name 'core' -o -name 'core.*' \) \
+    -print -delete
+}
+
 PATCHED_TARGETS=()
 PATCHED_BACKUPS=()
 
@@ -870,3 +877,5 @@ EOF
 else
   run_host_compile
 fi
+
+cleanup_generated_artifacts
