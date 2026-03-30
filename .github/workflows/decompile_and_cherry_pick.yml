@@ -26,8 +26,8 @@ jobs:
 
       - name: Setup Git Config
         run: |
-          git config --global user.email "55640145+BRid37@users.noreply.github.com"
-          git config --global user.name "BRid37"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
 
       - name: Stage compile helper
         run: |
