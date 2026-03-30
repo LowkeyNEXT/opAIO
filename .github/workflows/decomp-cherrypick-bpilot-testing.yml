@@ -221,7 +221,26 @@ jobs:
           fi
           echo "========================================="
 
+      - name: Restore compiled baseline
+        run: |
+          compile_commit=${{ env.compile_commit }}
+          compile_parent=$(git rev-parse "${compile_commit}^")
+
+          git diff --name-only "$compile_parent" "$compile_commit" | while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            if [ ! -e "$file" ] && git cat-file -e "${compile_commit}:$file" 2>/dev/null; then
+              mkdir -p "$(dirname "$file")"
+              git restore --source="${compile_commit}" --worktree -- "$file"
+            fi
+          done
+
+          if [ ! -f prebuilt ] && git cat-file -e "${compile_commit}:prebuilt" 2>/dev/null; then
+            git restore --source="${compile_commit}" --worktree -- prebuilt
+          fi
+
       - name: Compile Current Branch
+        env:
+          DOCKER_BUILD_PLATFORM: linux/arm64
         run: |
           "$RUNNER_TEMP/compile_current_branch.sh"
 

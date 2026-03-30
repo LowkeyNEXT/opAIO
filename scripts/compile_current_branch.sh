@@ -64,10 +64,16 @@ DOCKER_NETWORK_NAME="${DOCKER_NETWORK_NAME:-opaio-build-net}"
 DOCKER_CONTAINER_NAME="opaio-compile-$(git rev-parse --abbrev-ref HEAD | tr '[:upper:]/' '[:lower:]-')"
 DOCKER_PYENV_VOLUME="${DOCKER_PYENV_VOLUME:-opaio-pyenv-cache}"
 DOCKER_CACHE_VOLUME="${DOCKER_CACHE_VOLUME:-opaio-build-cache}"
+DOCKER_BUILD_PLATFORM="${DOCKER_BUILD_PLATFORM:-}"
+DOCKER_BUILDX_BUILDER="${DOCKER_BUILDX_BUILDER:-}"
+DOCKER_PLATFORM_ARGS=()
 PYENV_WRAPPER_DIR=""
 
 if [[ -f /sys/module/apparmor/parameters/enabled ]]; then
   DOCKER_SECURITY_ARGS+=(--security-opt apparmor=unconfined)
+fi
+if [[ -n "$DOCKER_BUILD_PLATFORM" ]]; then
+  DOCKER_PLATFORM_ARGS+=(--platform "$DOCKER_BUILD_PLATFORM")
 fi
 
 run_host_compile() {
@@ -816,16 +822,41 @@ exec "$PYENV_ROOT/bin/pyenv" "$@"
 EOF
   chmod +x "${PYENV_WRAPPER_DIR}/pyenv"
 
-  docker build \
-    --build-arg "USER_UID=${BUILD_UID}" \
-    -t "$IMAGE_TAG" \
-    -f "$DOCKERFILE_PATH" \
-    .
+  if [[ -n "$DOCKER_BUILD_PLATFORM" ]]; then
+    if docker run --privileged --rm tonistiigi/binfmt --help >/dev/null 2>&1; then
+      docker run --privileged --rm tonistiigi/binfmt --install arm64 >/dev/null
+    fi
+
+    if [[ -z "$DOCKER_BUILDX_BUILDER" ]]; then
+      DOCKER_BUILDX_BUILDER="opaio-arm"
+    fi
+
+    docker buildx inspect "$DOCKER_BUILDX_BUILDER" >/dev/null 2>&1 || \
+      docker buildx create --name "$DOCKER_BUILDX_BUILDER" --driver docker-container --use >/dev/null
+    docker buildx use "$DOCKER_BUILDX_BUILDER"
+    docker buildx inspect --bootstrap >/dev/null
+
+    docker buildx build \
+      --builder "$DOCKER_BUILDX_BUILDER" \
+      --platform "$DOCKER_BUILD_PLATFORM" \
+      --build-arg "USER_UID=${BUILD_UID}" \
+      -t "$IMAGE_TAG" \
+      -f "$DOCKERFILE_PATH" \
+      --load \
+      .
+  else
+    docker build \
+      --build-arg "USER_UID=${BUILD_UID}" \
+      -t "$IMAGE_TAG" \
+      -f "$DOCKERFILE_PATH" \
+      .
+  fi
 
   if [[ -f uv.lock ]]; then
     docker rm -f "$DOCKER_CONTAINER_NAME" >/dev/null 2>&1 || true
     docker run --rm \
       "${DOCKER_SECURITY_ARGS[@]}" \
+      "${DOCKER_PLATFORM_ARGS[@]}" \
       --name "$DOCKER_CONTAINER_NAME" \
       --network "$DOCKER_NETWORK_NAME" \
       --user "${WORKSPACE_UID}:${WORKSPACE_GID}" \
@@ -852,6 +883,7 @@ EOF
     docker rm -f "$DOCKER_CONTAINER_NAME" >/dev/null 2>&1 || true
     docker run --rm \
       "${DOCKER_SECURITY_ARGS[@]}" \
+      "${DOCKER_PLATFORM_ARGS[@]}" \
       --name "$DOCKER_CONTAINER_NAME" \
       --network "$DOCKER_NETWORK_NAME" \
       --user "${WORKSPACE_UID}:${WORKSPACE_GID}" \
@@ -881,4 +913,5 @@ else
   run_host_compile
 fi
 
+: > prebuilt
 cleanup_generated_artifacts
