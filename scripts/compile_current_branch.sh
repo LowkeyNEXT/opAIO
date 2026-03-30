@@ -780,6 +780,16 @@ if command -v docker >/dev/null 2>&1; then
   if ! docker volume inspect "$DOCKER_CACHE_VOLUME" >/dev/null 2>&1; then
     docker volume create "$DOCKER_CACHE_VOLUME" >/dev/null
   fi
+
+  docker run --rm \
+    -v "${DOCKER_PYENV_VOLUME}:/target" \
+    alpine:3.20 \
+    sh -lc "mkdir -p /target && chown -R ${WORKSPACE_UID}:${WORKSPACE_GID} /target"
+
+  docker run --rm \
+    -v "${DOCKER_CACHE_VOLUME}:/target" \
+    alpine:3.20 \
+    sh -lc "mkdir -p /target/pip /target/pypoetry /target/uv /target/tmp && chown -R ${WORKSPACE_UID}:${WORKSPACE_GID} /target"
   PYENV_WRAPPER_DIR="$(mktemp -d "${TMPDIR:-/tmp}/pyenv-wrapper.XXXXXX")"
   cat > "${PYENV_WRAPPER_DIR}/pyenv" <<'EOF'
 #!/usr/bin/env bash
