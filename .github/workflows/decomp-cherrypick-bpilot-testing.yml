@@ -241,6 +241,9 @@ jobs:
       - name: Compile Current Branch
         env:
           DOCKER_BUILD_PLATFORM: linux/arm64
+          DOCKER_PYENV_VOLUME: opaio-pyenv-cache-0103
+          DOCKER_CACHE_VOLUME: opaio-build-cache-0103
+          DOCKER_NETWORK_NAME: opaio-build-net-0103
         run: |
           "$RUNNER_TEMP/compile_current_branch.sh"
 
