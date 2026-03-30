@@ -892,7 +892,7 @@ EOF
       -v "${ROOT_DIR}:/workspace" \
       -w /workspace \
       "$IMAGE_TAG" \
-      bash -lc 'mkdir -p "$HOME" "$PIP_CACHE_DIR" "$POETRY_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" && git config --global --add safe.directory /workspace && tools/install_python_dependencies.sh && source /workspace/.venv/bin/activate && uv run python system/manager/build.py'
+      bash -lc 'mkdir -p "$HOME" "$PIP_CACHE_DIR" "$POETRY_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" /home/batman/.cache/scons_cache && rm -rf /tmp/scons_cache && ln -s /home/batman/.cache/scons_cache /tmp/scons_cache && git config --global --add safe.directory /workspace && tools/install_python_dependencies.sh && source /workspace/.venv/bin/activate && uv run python system/manager/build.py'
   elif [[ -f poetry.lock ]]; then
     docker rm -f "$DOCKER_CONTAINER_NAME" >/dev/null 2>&1 || true
     docker run --rm \
@@ -918,7 +918,7 @@ EOF
       -v "${ROOT_DIR}:/workspace" \
       -w /workspace \
       "$IMAGE_TAG" \
-      bash -lc 'mkdir -p "$HOME" "$PIP_CACHE_DIR" "$POETRY_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" && git config --global --add safe.directory /workspace && tools/install_python_dependencies.sh && if [[ -f "$HOME/.pyenvrc" ]]; then source "$HOME/.pyenvrc"; fi && poetry run python system/manager/build.py'
+      bash -lc 'mkdir -p "$HOME" "$PIP_CACHE_DIR" "$POETRY_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" /home/batman/.cache/scons_cache && rm -rf /tmp/scons_cache && ln -s /home/batman/.cache/scons_cache /tmp/scons_cache && git config --global --add safe.directory /workspace && tools/install_python_dependencies.sh && if [[ -f "$HOME/.pyenvrc" ]]; then source "$HOME/.pyenvrc"; fi && poetry run python system/manager/build.py'
   else
     echo "Unsupported branch: neither uv.lock nor poetry.lock found."
     exit 1
