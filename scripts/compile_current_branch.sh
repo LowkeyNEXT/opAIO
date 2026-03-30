@@ -876,7 +876,7 @@ EOF
       --user "${WORKSPACE_UID}:${WORKSPACE_GID}" \
       -e CI=1 \
       -e ORT=1 \
-      -e HOME=/home/batman \
+      -e HOME=/home/batman/.cache/home \
       -e VIRTUAL_ENV=/workspace/.venv \
       -e PATH=/opt/pyenv-wrapper:/home/batman/.local/bin:/workspace/.venv/bin:/usr/local/bin:/usr/bin:/bin \
       -e PIP_CACHE_DIR=/home/batman/.cache/pip \
@@ -892,7 +892,7 @@ EOF
       -v "${ROOT_DIR}:/workspace" \
       -w /workspace \
       "$IMAGE_TAG" \
-      bash -lc 'mkdir -p "$PIP_CACHE_DIR" "$POETRY_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" && git config --global --add safe.directory /workspace && tools/install_python_dependencies.sh && source /workspace/.venv/bin/activate && uv run python system/manager/build.py'
+      bash -lc 'mkdir -p "$HOME" "$PIP_CACHE_DIR" "$POETRY_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" && git config --global --add safe.directory /workspace && tools/install_python_dependencies.sh && source /workspace/.venv/bin/activate && uv run python system/manager/build.py'
   elif [[ -f poetry.lock ]]; then
     docker rm -f "$DOCKER_CONTAINER_NAME" >/dev/null 2>&1 || true
     docker run --rm \
@@ -903,7 +903,7 @@ EOF
       --user "${WORKSPACE_UID}:${WORKSPACE_GID}" \
       -e CI=1 \
       -e ORT=1 \
-      -e HOME=/home/batman \
+      -e HOME=/home/batman/.cache/home \
       -e PYENV_ROOT=/home/batman/pyenv \
       -e PATH=/opt/pyenv-wrapper:/home/batman/.local/bin:/home/batman/pyenv/bin:/home/batman/pyenv/shims:/usr/local/bin:/usr/bin:/bin \
       -e PIP_CACHE_DIR=/home/batman/.cache/pip \
@@ -918,7 +918,7 @@ EOF
       -v "${ROOT_DIR}:/workspace" \
       -w /workspace \
       "$IMAGE_TAG" \
-      bash -lc 'mkdir -p "$PIP_CACHE_DIR" "$POETRY_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" && git config --global --add safe.directory /workspace && tools/install_python_dependencies.sh && if [[ -f "$HOME/.pyenvrc" ]]; then source "$HOME/.pyenvrc"; fi && poetry run python system/manager/build.py'
+      bash -lc 'mkdir -p "$HOME" "$PIP_CACHE_DIR" "$POETRY_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" && git config --global --add safe.directory /workspace && tools/install_python_dependencies.sh && if [[ -f "$HOME/.pyenvrc" ]]; then source "$HOME/.pyenvrc"; fi && poetry run python system/manager/build.py'
   else
     echo "Unsupported branch: neither uv.lock nor poetry.lock found."
     exit 1
