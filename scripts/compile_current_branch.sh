@@ -879,7 +879,7 @@ EOF
       -v "${ROOT_DIR}:/workspace" \
       -w /workspace \
       "$IMAGE_TAG" \
-      bash -lc 'mkdir -p "$PIP_CACHE_DIR" "$POETRY_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" && if ! find /usr/lib /usr/local/lib -name "libOmxCore.so" -print -quit | grep -q .; then lib="$(find /usr/lib /usr/lib/x86_64-linux-gnu -name "libomxil-bellagio.so*" -print | head -n 1)" && if [[ -n "$lib" ]]; then ln -sf "$lib" /usr/lib/x86_64-linux-gnu/libOmxCore.so; fi; fi && git config --global --add safe.directory /workspace && tools/install_python_dependencies.sh && source /workspace/.venv/bin/activate && uv run python system/manager/build.py'
+      bash -lc 'mkdir -p "$PIP_CACHE_DIR" "$POETRY_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" && if ! find /usr/lib /usr/local/lib -name "libOmxCore.so" -print -quit | grep -q .; then lib="$(find /usr/lib /usr/local/lib -name "libomxil-bellagio.so*" -print | head -n 1)" && if [[ -n "$lib" ]]; then ln -sf "$lib" "$(dirname "$lib")/libOmxCore.so"; fi; fi && git config --global --add safe.directory /workspace && tools/install_python_dependencies.sh && source /workspace/.venv/bin/activate && uv run python system/manager/build.py'
   elif [[ -f poetry.lock ]]; then
     docker rm -f "$DOCKER_CONTAINER_NAME" >/dev/null 2>&1 || true
     docker run --rm \
@@ -905,7 +905,7 @@ EOF
       -v "${ROOT_DIR}:/workspace" \
       -w /workspace \
       "$IMAGE_TAG" \
-      bash -lc 'mkdir -p "$PIP_CACHE_DIR" "$POETRY_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" && if ! find /usr/lib /usr/local/lib -name "libOmxCore.so" -print -quit | grep -q .; then lib="$(find /usr/lib /usr/lib/x86_64-linux-gnu -name "libomxil-bellagio.so*" -print | head -n 1)" && if [[ -n "$lib" ]]; then ln -sf "$lib" /usr/lib/x86_64-linux-gnu/libOmxCore.so; fi; fi && git config --global --add safe.directory /workspace && tools/install_python_dependencies.sh && if [[ -f "$HOME/.pyenvrc" ]]; then source "$HOME/.pyenvrc"; fi && poetry run python system/manager/build.py'
+      bash -lc 'mkdir -p "$PIP_CACHE_DIR" "$POETRY_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" && if ! find /usr/lib /usr/local/lib -name "libOmxCore.so" -print -quit | grep -q .; then lib="$(find /usr/lib /usr/local/lib -name "libomxil-bellagio.so*" -print | head -n 1)" && if [[ -n "$lib" ]]; then ln -sf "$lib" "$(dirname "$lib")/libOmxCore.so"; fi; fi && git config --global --add safe.directory /workspace && tools/install_python_dependencies.sh && if [[ -f "$HOME/.pyenvrc" ]]; then source "$HOME/.pyenvrc"; fi && poetry run python system/manager/build.py'
   else
     echo "Unsupported branch: neither uv.lock nor poetry.lock found."
     exit 1
