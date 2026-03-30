@@ -13,7 +13,7 @@ else
 fi
 
 if [[ ! -d "$ROOT_DIR/.git" ]]; then
-  echo "Unable to locate repository root from GITHUB_WORKSPACE or script path: $ROOT_DIR"
+  echo "Unable to locate repository root from the checked-out workspace."
   exit 1
 fi
 
@@ -65,7 +65,7 @@ DOCKER_CONTAINER_NAME="opaio-compile-$(git rev-parse --abbrev-ref HEAD | tr '[:u
 DOCKER_PYENV_VOLUME="${DOCKER_PYENV_VOLUME:-opaio-pyenv-cache}"
 DOCKER_CACHE_VOLUME="${DOCKER_CACHE_VOLUME:-opaio-build-cache}"
 DOCKER_BUILD_PLATFORM="${DOCKER_BUILD_PLATFORM:-}"
-DOCKER_BUILDX_BUILDER="${DOCKER_BUILDX_BUILDER:-}"
+DOCKER_BUILDX_BUILDER="${DOCKER_BUILDX_BUILDER:-opaio-arm}"
 DOCKER_PLATFORM_ARGS=()
 PYENV_WRAPPER_DIR=""
 
@@ -823,17 +823,18 @@ EOF
   chmod +x "${PYENV_WRAPPER_DIR}/pyenv"
 
   if [[ -n "$DOCKER_BUILD_PLATFORM" ]]; then
+    if ! docker buildx version >/dev/null 2>&1; then
+      echo "Docker buildx is required for cross-platform runner builds."
+      exit 1
+    fi
+
     if docker run --privileged --rm tonistiigi/binfmt --help >/dev/null 2>&1; then
       docker run --privileged --rm tonistiigi/binfmt --install arm64 >/dev/null
     fi
 
-    if [[ -z "$DOCKER_BUILDX_BUILDER" ]]; then
-      DOCKER_BUILDX_BUILDER="opaio-arm"
-    fi
-
     docker buildx inspect "$DOCKER_BUILDX_BUILDER" >/dev/null 2>&1 || \
-      docker buildx create --name "$DOCKER_BUILDX_BUILDER" --driver docker-container --use >/dev/null
-    docker buildx use "$DOCKER_BUILDX_BUILDER"
+      docker buildx create --driver docker-container --name "$DOCKER_BUILDX_BUILDER" --use >/dev/null 2>&1
+    docker buildx use "$DOCKER_BUILDX_BUILDER" >/dev/null
     docker buildx inspect --bootstrap >/dev/null
 
     docker buildx build \
