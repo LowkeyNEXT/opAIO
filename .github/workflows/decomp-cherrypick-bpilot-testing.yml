@@ -247,13 +247,76 @@ jobs:
         run: |
           "$RUNNER_TEMP/compile_current_branch.sh"
 
+      - name: Clean Build Artifacts
+        run: |
+          echo "Removing development-only files (mirroring FrogPilot prebuilt cleanup)..."
+
+          # Remove .gitignore so compiled artifacts (.so, .o, cereal/gen, etc.) can be staged
+          rm -f .gitignore .gitmodules .gitattributes .lfsconfig .overlay_init
+
+          # Remove test, debug, and cache directories
+          find . -type d \( -iname "debug" -o -iname "test" -o -iname "tests" -o -name '__pycache__' \) \
+            ! -path "./.git/*" -exec rm -rf {} + 2>/dev/null || true
+
+          # Remove intermediate build artifacts that aren't needed at runtime
+          find . -type f \( \
+            -name '*.a' -o \
+            -name '*.o' -o \
+            -name '*.os' -o \
+            -name '*.pyc' \
+          \) ! -path "./.git/*" -delete 2>/dev/null || true
+
+          # Remove .onnx files (tinygrad .pkl replacements are the runtime models)
+          find . -type f -name '*.onnx' ! -path "./.git/*" -delete 2>/dev/null || true
+
+          # Clean .github except our own workflows
+          find .github -mindepth 1 -maxdepth 1 ! -name 'workflows' -exec rm -rf {} + 2>/dev/null || true
+          find .github/workflows -mindepth 1 ! \( \
+            -type f \( \
+              -name 'decompile_and_cherry_pick.yml' -o \
+              -name 'decomp-cherrypick-bpilot-testing.yml' -o \
+              -name 'cherrypick-bpilot-pandatorque.yml' -o \
+              -name 'compile.yml' -o \
+              -name 'create_branch_and_sync.yml' -o \
+              -name 'prebuild.yml' -o \
+              -name 'revert_and_cherry_pick_V2.yml' -o \
+              -name 'revert_precompile_and_cherry_pick.yml' -o \
+              -name 'sync-*.yml' -o \
+              -name 'sync_*.yml' \
+            \) \
+          \) -exec rm -rf {} + 2>/dev/null || true
+
+          # Strip panda board source, keep only firmware binaries
+          find panda/board -type f ! -path 'panda/board/jungle/*' \
+            ! -name 'bootstub.panda.bin' \
+            ! -name 'bootstub.panda_h7.bin' \
+            ! -name 'panda.bin.signed' \
+            ! -name 'panda_h7.bin.signed' \
+            -delete 2>/dev/null || true
+
+          # Remove platform-specific binaries not needed on comma device
+          find third_party/ -name '*Darwin*' -exec rm -rf {} + 2>/dev/null || true
+          find third_party/ -name '*x86*' -exec rm -rf {} + 2>/dev/null || true
+
+          # Remove build system and development files
+          rm -rf .sconsign.dblite .vscode/ Jenkinsfile release/ site_scons/ teleoprtc_repo/ 2>/dev/null || true
+
+          # Remove empty directories
+          find . -type d -empty ! -path "./.git/*" -delete 2>/dev/null || true
+
+          # Ensure prebuilt marker exists
+          touch prebuilt
+
+          echo "Cleanup complete."
+
       - name: Commit Compiled Files
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          git add -A -f
           staged_files="$(git diff --cached --name-only)"
-          echo "Staged files:"
+          echo "Staged files ($(echo "$staged_files" | wc -l) total):"
           printf '%s\n' "$staged_files"
 
           if printf '%s\n' "$staged_files" | grep -Eqi '(^|/)(\.env|\.npmrc|\.pypirc|id_rsa|id_dsa|known_hosts|authorized_keys|.*\.(pem|key|p12|mobileprovision|kdbx))$|(^|/)(secret|secrets|token|tokens|credential|credentials)(/|$)'; then
@@ -281,7 +344,7 @@ jobs:
             exit 1
           fi
 
-          git add -A
+          git add -A -f
           git commit -m "Compile FrogPilot" || echo "No changes to commit"
 
       - name: Push changes
