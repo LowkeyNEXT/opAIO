@@ -52,8 +52,8 @@ class FrogPilotAcceleration:
     eco_gear = sm["frogpilotCarState"].ecoGear
     sport_gear = sm["frogpilotCarState"].sportGear
 
-    if sm["frogpilotCarState"].trafficModeEnabled:
-      self.max_accel = get_max_accel(v_ego)
+    if self.frogpilot_planner.frogpilot_traffic.active:
+      self.max_accel = self.frogpilot_planner.frogpilot_traffic.max_accel
     elif (eco_gear or sport_gear) and frogpilot_toggles.map_acceleration:
       if eco_gear:
         self.max_accel = get_max_accel_eco(v_ego)
@@ -72,14 +72,16 @@ class FrogPilotAcceleration:
       else:
         self.max_accel = get_max_accel(v_ego)
 
-    if frogpilot_toggles.human_acceleration:
+    if not self.frogpilot_planner.frogpilot_traffic.active and frogpilot_toggles.human_acceleration:
       self.max_accel = get_max_accel_low_speeds(self.max_accel, self.frogpilot_planner.v_cruise)
       self.max_accel = min(get_max_accel_ramp_off(self.max_accel, self.frogpilot_planner.v_cruise, v_ego), self.max_accel)
 
     if self.frogpilot_planner.frogpilot_weather.weather_id != 0:
       self.max_accel -= self.max_accel * self.frogpilot_planner.frogpilot_weather.reduce_acceleration
 
-    if self.frogpilot_planner.tracking_lead:
+    if self.frogpilot_planner.frogpilot_traffic.active:
+      self.min_accel = self.frogpilot_planner.frogpilot_traffic.min_accel
+    elif self.frogpilot_planner.tracking_lead:
       self.min_accel = ACCEL_MIN
     elif sm["frogpilotCarState"].forceCoast:
       self.min_accel = A_CRUISE_MIN_ECO

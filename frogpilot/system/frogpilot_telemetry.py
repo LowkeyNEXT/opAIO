@@ -102,12 +102,6 @@ def build_sweep_metadata(frogpilot_toggles):
     "human_acceleration": frogpilot_toggles.human_acceleration,
     "human_following": frogpilot_toggles.human_following,
     "increase_stopped_distance": frogpilot_toggles.increase_stopped_distance,
-    "traffic_mode_follow": frogpilot_toggles.traffic_mode_follow[0],
-    "traffic_mode_jerk_acceleration": frogpilot_toggles.traffic_mode_jerk_acceleration[0],
-    "traffic_mode_jerk_danger": frogpilot_toggles.traffic_mode_jerk_danger[0],
-    "traffic_mode_jerk_deceleration": frogpilot_toggles.traffic_mode_jerk_deceleration[0],
-    "traffic_mode_jerk_speed": frogpilot_toggles.traffic_mode_jerk_speed[0],
-    "traffic_mode_jerk_speed_decrease": frogpilot_toggles.traffic_mode_jerk_speed_decrease[0],
   }
   return metadata
 

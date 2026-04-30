@@ -27,7 +27,6 @@ FrogPilotLongitudinalPanel::FrogPilotLongitudinalPanel(FrogPilotSettingsWindow *
   FrogPilotListWidget *speedLimitControllerQOLList = new FrogPilotListWidget(this);
   FrogPilotListWidget *speedLimitControllerVisualList = new FrogPilotListWidget(this);
   FrogPilotListWidget *standardPersonalityList = new FrogPilotListWidget(this);
-  FrogPilotListWidget *trafficPersonalityList = new FrogPilotListWidget(this);
   FrogPilotListWidget *weatherList = new FrogPilotListWidget(this);
   FrogPilotListWidget *weatherLowVisibilityList = new FrogPilotListWidget(this);
   FrogPilotListWidget *weatherRainList = new FrogPilotListWidget(this);
@@ -47,7 +46,6 @@ FrogPilotLongitudinalPanel::FrogPilotLongitudinalPanel(FrogPilotSettingsWindow *
   ScrollView *speedLimitControllerQOLPanel = new ScrollView(speedLimitControllerQOLList, this);
   ScrollView *speedLimitControllerVisualPanel = new ScrollView(speedLimitControllerVisualList, this);
   ScrollView *standardPersonalityPanel = new ScrollView(standardPersonalityList, this);
-  ScrollView *trafficPersonalityPanel = new ScrollView(trafficPersonalityList, this);
   ScrollView *weatherLowVisibilityPanel = new ScrollView(weatherLowVisibilityList, this);
   ScrollView *weatherPanel = new ScrollView(weatherList, this);
   ScrollView *weatherRainPanel = new ScrollView(weatherRainList, this);
@@ -67,7 +65,6 @@ FrogPilotLongitudinalPanel::FrogPilotLongitudinalPanel(FrogPilotSettingsWindow *
   longitudinalLayout->addWidget(speedLimitControllerQOLPanel);
   longitudinalLayout->addWidget(speedLimitControllerVisualPanel);
   longitudinalLayout->addWidget(standardPersonalityPanel);
-  longitudinalLayout->addWidget(trafficPersonalityPanel);
   longitudinalLayout->addWidget(weatherLowVisibilityPanel);
   longitudinalLayout->addWidget(weatherPanel);
   longitudinalLayout->addWidget(weatherRainPanel);
@@ -100,15 +97,6 @@ FrogPilotLongitudinalPanel::FrogPilotLongitudinalPanel(FrogPilotSettingsWindow *
     {"ShowCSCStatus", tr("Status Widget"), tr("<b>Show the \"Curve Speed Controller\" target speed on the driving screen.</b>"), ""},
 
     {"CustomPersonalities", tr("Driving Personalities"), tr("<b>Customize the \"Driving Personalities\"</b> to better match your driving style."), "../../frogpilot/assets/toggle_icons/icon_personality.png"},
-
-    {"TrafficPersonalityProfile", tr("Traffic Mode"), tr("<b>Customize the \"Traffic Mode\" personality profile.</b> Designed for stop-and-go driving."), "../../frogpilot/assets/stock_theme/distance_icons/traffic.png"},
-    {"TrafficFollow", tr("Following Distance"), tr("<b>The minimum following distance to the lead vehicle in \"Traffic Mode\".</b> openpilot blends between this value and the \"Aggressive\" profile as speed increases. Increase for more space; decrease for tighter gaps."), ""},
-    {"TrafficJerkAcceleration", tr("Acceleration Smoothness"), tr("<b>How smoothly openpilot accelerates in \"Traffic Mode\".</b> Increase for gentler starts; decrease for faster but more abrupt takeoffs."), ""},
-    {"TrafficJerkDeceleration", tr("Braking Smoothness"), tr("<b>How smoothly openpilot brakes in \"Traffic Mode\".</b> Increase for gentler stops; decrease for quicker but sharper braking."), ""},
-    {"TrafficJerkDanger", tr("Safety Gap Bias"), tr("<b>How much extra space openpilot keeps from the vehicle ahead in \"Traffic Mode\".</b> Increase for larger gaps and more cautious following; decrease for tighter gaps and closer following."), ""},
-    {"TrafficJerkSpeedDecrease", tr("Slowdown Response"), tr("<b>How smoothly openpilot slows down in \"Traffic Mode\".</b> Increase for more gradual deceleration; decrease for faster but sharper slowdowns."), ""},
-    {"TrafficJerkSpeed", tr("Speed-Up Response"), tr("<b>How smoothly openpilot speeds up in \"Traffic Mode\".</b> Increase for more gradual acceleration; decrease for quicker but more jolting acceleration."), ""},
-    {"ResetTrafficPersonality", tr("Reset to Defaults"), tr("<b>Reset \"Traffic Mode\" settings to defaults.</b>"), ""},
 
     {"AggressivePersonalityProfile", tr("Aggressive"), tr("<b>Customize the \"Aggressive\" personality profile.</b> Designed for assertive driving with tighter gaps."), "../../frogpilot/assets/stock_theme/distance_icons/aggressive.png"},
     {"AggressiveFollow", tr("Following Distance"), tr("<b>How many seconds openpilot follows behind lead vehicles when using the \"Aggressive\" profile.</b> Increase for more space; decrease for tighter gaps.<br><br>Default: 1.25 seconds."), ""},
@@ -297,19 +285,9 @@ FrogPilotLongitudinalPanel::FrogPilotLongitudinalPanel(FrogPilotSettingsWindow *
         longitudinalLayout->setCurrentWidget(customDrivingPersonalityPanel);
       });
       longitudinalToggle = customPersonalitiesToggle;
-    } else if (param == "ResetTrafficPersonality" || param == "ResetAggressivePersonality" || param == "ResetStandardPersonality" || param == "ResetRelaxedPersonality") {
+    } else if (param == "ResetAggressivePersonality" || param == "ResetStandardPersonality" || param == "ResetRelaxedPersonality") {
       ButtonControl *resetButton = new ButtonControl(title, tr("RESET"), desc);
       longitudinalToggle = resetButton;
-    } else if (param == "TrafficPersonalityProfile") {
-      FrogPilotButtonsControl *trafficPersonalityToggle = new FrogPilotButtonsControl(title, desc, icon, {tr("MANAGE")});
-      QObject::connect(trafficPersonalityToggle, &FrogPilotButtonsControl::buttonClicked, [longitudinalLayout, trafficPersonalityPanel, this](int id) {
-        openSubSubPanel();
-
-        longitudinalLayout->setCurrentWidget(trafficPersonalityPanel);
-
-        customPersonalityOpen = true;
-      });
-      longitudinalToggle = trafficPersonalityToggle;
     } else if (param == "AggressivePersonalityProfile") {
       FrogPilotButtonsControl *aggressivePersonalityToggle = new FrogPilotButtonsControl(title, desc, icon, {tr("MANAGE")});
       QObject::connect(aggressivePersonalityToggle, &FrogPilotButtonsControl::buttonClicked, [longitudinalLayout, aggressivePersonalityPanel, this](int id) {
@@ -340,17 +318,13 @@ FrogPilotLongitudinalPanel::FrogPilotLongitudinalPanel(FrogPilotSettingsWindow *
         customPersonalityOpen = true;
       });
       longitudinalToggle = relaxedPersonalityToggle;
-    } else if (aggressivePersonalityKeys.contains(param) || standardPersonalityKeys.contains(param) || relaxedPersonalityKeys.contains(param) || trafficPersonalityKeys.contains(param)) {
-      if (param == "TrafficFollow" || param == "AggressiveFollow" || param == "StandardFollow" || param == "RelaxedFollow") {
+    } else if (aggressivePersonalityKeys.contains(param) || standardPersonalityKeys.contains(param) || relaxedPersonalityKeys.contains(param)) {
+      if (param == "AggressiveFollow" || param == "StandardFollow" || param == "RelaxedFollow") {
         std::map<float, QString> followTimeLabels;
         for (float i = 0; i <= 3; i += 0.01) {
           followTimeLabels[i] = std::lround(i / 0.01) == 1 / 0.01 ? QString::number(i, 'f', 2) + tr(" second") : QString::number(i, 'f', 2) + tr(" seconds");
         }
-        if (param == "TrafficFollow") {
-          longitudinalToggle = new FrogPilotParamValueControl(param, title, desc, icon, 0.5, 3, QString(), followTimeLabels, 0.01, true);
-        } else {
-          longitudinalToggle = new FrogPilotParamValueControl(param, title, desc, icon, 1, 3, QString(), followTimeLabels, 0.01, true);
-        }
+        longitudinalToggle = new FrogPilotParamValueControl(param, title, desc, icon, 1, 3, QString(), followTimeLabels, 0.01, true);
       } else {
         longitudinalToggle = new FrogPilotParamValueControl(param, title, desc, icon, 25, 200, "%");
       }
@@ -658,8 +632,6 @@ FrogPilotLongitudinalPanel::FrogPilotLongitudinalPanel(FrogPilotSettingsWindow *
       speedLimitControllerVisualList->addItem(longitudinalToggle);
     } else if (standardPersonalityKeys.contains(param)) {
       standardPersonalityList->addItem(longitudinalToggle);
-    } else if (trafficPersonalityKeys.contains(param)) {
-      trafficPersonalityList->addItem(longitudinalToggle);
     } else if (weatherKeys.contains(param)) {
       weatherList->addItem(longitudinalToggle);
     } else if (weatherLowVisibilityKeys.contains(param)) {
@@ -695,31 +667,6 @@ FrogPilotLongitudinalPanel::FrogPilotLongitudinalPanel(FrogPilotSettingsWindow *
   for (const QString &key : forceUpdateKeys) {
     QObject::connect(static_cast<ToggleControl*>(toggles[key]), &ToggleControl::toggleFlipped, this, &FrogPilotLongitudinalPanel::updateToggles);
   }
-
-  FrogPilotParamValueControl *trafficFollowToggle = static_cast<FrogPilotParamValueControl*>(toggles["TrafficFollow"]);
-  FrogPilotParamValueControl *trafficAccelerationToggle = static_cast<FrogPilotParamValueControl*>(toggles["TrafficJerkAcceleration"]);
-  FrogPilotParamValueControl *trafficDecelerationToggle = static_cast<FrogPilotParamValueControl*>(toggles["TrafficJerkDeceleration"]);
-  FrogPilotParamValueControl *trafficDangerToggle = static_cast<FrogPilotParamValueControl*>(toggles["TrafficJerkDanger"]);
-  FrogPilotParamValueControl *trafficSpeedToggle = static_cast<FrogPilotParamValueControl*>(toggles["TrafficJerkSpeed"]);
-  FrogPilotParamValueControl *trafficSpeedDecreaseToggle = static_cast<FrogPilotParamValueControl*>(toggles["TrafficJerkSpeedDecrease"]);
-  FrogPilotButtonsControl *trafficResetButton = static_cast<FrogPilotButtonsControl*>(toggles["ResetTrafficPersonality"]);
-  QObject::connect(trafficResetButton, &FrogPilotButtonsControl::buttonClicked, [=]() {
-    if (FrogPilotConfirmationDialog::yesorno(tr("Are you sure you want to completely reset your settings for <b>Traffic Mode</b>?"), this)) {
-      params.putFloat("TrafficFollow", std::stof(params.getKeyDefaultValue("TrafficFollow").value()));
-      params.putFloat("TrafficJerkAcceleration", std::stof(params.getKeyDefaultValue("TrafficJerkAcceleration").value()));
-      params.putFloat("TrafficJerkDeceleration", std::stof(params.getKeyDefaultValue("TrafficJerkDeceleration").value()));
-      params.putFloat("TrafficJerkDanger", std::stof(params.getKeyDefaultValue("TrafficJerkDanger").value()));
-      params.putFloat("TrafficJerkSpeed", std::stof(params.getKeyDefaultValue("TrafficJerkSpeed").value()));
-      params.putFloat("TrafficJerkSpeedDecrease", std::stof(params.getKeyDefaultValue("TrafficJerkSpeedDecrease").value()));
-
-      trafficFollowToggle->refresh();
-      trafficAccelerationToggle->refresh();
-      trafficDecelerationToggle->refresh();
-      trafficDangerToggle->refresh();
-      trafficSpeedToggle->refresh();
-      trafficSpeedDecreaseToggle->refresh();
-    }
-  });
 
   FrogPilotParamValueControl *aggressiveFollowToggle = static_cast<FrogPilotParamValueControl*>(toggles["AggressiveFollow"]);
   FrogPilotParamValueControl *aggressiveAccelerationToggle = static_cast<FrogPilotParamValueControl*>(toggles["AggressiveJerkAcceleration"]);
@@ -1073,8 +1020,6 @@ void FrogPilotLongitudinalPanel::updateToggles() {
         toggles["SLCVisuals"]->setVisible(true);
       } else if (standardPersonalityKeys.contains(key)) {
         toggles["StandardPersonalityProfile"]->setVisible(true);
-      } else if (trafficPersonalityKeys.contains(key)) {
-        toggles["TrafficPersonalityProfile"]->setVisible(true);
       }
     }
   }
