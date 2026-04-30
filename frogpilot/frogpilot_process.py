@@ -15,6 +15,7 @@ from openpilot.frogpilot.common.frogpilot_utilities import ThreadManager, flash_
 from openpilot.frogpilot.common.frogpilot_variables import ERROR_LOGS_PATH, FrogPilotVariables
 from openpilot.frogpilot.controls.frogpilot_planner import FrogPilotPlanner
 from openpilot.frogpilot.system.frogpilot_stats import send_stats
+from openpilot.frogpilot.system.frogpilot_telemetry import run_offroad_sweep
 from openpilot.frogpilot.system.frogpilot_tracking import FrogPilotTracking
 
 ASSET_CHECK_RATE = (1 / DT_MDL)
@@ -43,6 +44,7 @@ def transition_offroad(frogpilot_planner, theme_manager, thread_manager, time_va
     theme_manager.update_active_theme(time_validated, frogpilot_toggles, randomize_theme=True)
 
   if time_validated:
+    thread_manager.run_with_lock(run_offroad_sweep, (frogpilot_toggles,))
     thread_manager.run_with_lock(send_stats, (params, frogpilot_toggles))
 
 def transition_onroad(error_log):
