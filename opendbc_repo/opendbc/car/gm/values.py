@@ -303,6 +303,10 @@ class CAR(Platforms):
     [GMCarDocs("Cadillac Escalade ESV 2019", "Adaptive Cruise Control (ACC) & LKAS")],
     CADILLAC_ESCALADE_ESV.specs,
   )
+  CADILLAC_ESCALADE_ESV_2019_ASCM = GMPlatformConfig(
+    [GMCarDocs("Cadillac Escalade ESV Platinum 2019 ASCM Harness", "Adaptive Cruise Control (ACC) & LKAS")],
+    CADILLAC_ESCALADE_ESV_2019.specs,
+  )
   CHEVROLET_BOLT_ACC_2022_2023 = GMPlatformConfig(
     [
       GMCarDocs("Chevrolet Bolt ACC 2022-23", "Premier or Premier Redline Trim without Super Cruise Package", video="https://youtu.be/xvwzGMUA210"),
@@ -576,7 +580,14 @@ CC_REGEN_PADDLE_CAR = {
 CAMERA_ACC_CAR.update(CC_ONLY_CAR)
 
 # ASCM-INT paths are only enabled when SASCM (0x2FF) is detected at runtime
-ASCM_INT = {CAR.CHEVROLET_VOLT_ASCM, CAR.GMC_ACADIA_ASCM, CAR.CHEVROLET_MALIBU_ASCM, CAR.CADILLAC_ESCALADE_ASCM, CAR.BUICK_LACROSSE_ASCM}
+ASCM_INT = {
+  CAR.CHEVROLET_VOLT_ASCM,
+  CAR.GMC_ACADIA_ASCM,
+  CAR.CHEVROLET_MALIBU_ASCM,
+  CAR.CADILLAC_ESCALADE_ASCM,
+  CAR.CADILLAC_ESCALADE_ESV_2019_ASCM,
+  CAR.BUICK_LACROSSE_ASCM,
+}
 
 STEER_THRESHOLD = 1.0
 

@@ -428,7 +428,7 @@ class CarInterface(CarInterfaceBase):
     elif candidate == CAR.CADILLAC_ESCALADE_ASCM:
       CarInterfaceBase.configure_torque_tune(CAR.CADILLAC_ESCALADE, ret.lateralTuning)
 
-    elif candidate in (CAR.CADILLAC_ESCALADE_ESV, CAR.CADILLAC_ESCALADE_ESV_2019):
+    elif candidate in (CAR.CADILLAC_ESCALADE_ESV, CAR.CADILLAC_ESCALADE_ESV_2019, CAR.CADILLAC_ESCALADE_ESV_2019_ASCM):
       ret.minEnableSpeed = -1.  # engage speed is decided by pcm
 
       if candidate == CAR.CADILLAC_ESCALADE_ESV:
@@ -437,7 +437,8 @@ class CarInterface(CarInterfaceBase):
         ret.lateralTuning.pid.kf = 0.000045
       else:
         ret.steerActuatorDelay = 0.2
-        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
+        torque_candidate = CAR.CADILLAC_ESCALADE_ESV_2019 if candidate == CAR.CADILLAC_ESCALADE_ESV_2019_ASCM else candidate
+        CarInterfaceBase.configure_torque_tune(torque_candidate, ret.lateralTuning)
 
     elif candidate in (
       CAR.CHEVROLET_BOLT_ACC_2022_2023,

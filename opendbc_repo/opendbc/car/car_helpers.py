@@ -8,7 +8,7 @@ from opendbc.car import gen_empty_fingerprint
 from opendbc.car.can_definitions import CanRecvCallable, CanSendCallable
 from opendbc.car.carlog import carlog
 from opendbc.car.structs import CarParams, CarParamsT
-from opendbc.car.fingerprints import eliminate_incompatible_cars, all_legacy_fingerprint_cars
+from opendbc.car.fingerprints import eliminate_incompatible_cars, exact_fingerprint_matches, all_legacy_fingerprint_cars
 from opendbc.car.fw_versions import ObdCallback, get_fw_versions_ordered, get_present_ecus, match_fw_to_car
 from opendbc.car.mock.values import CAR as MOCK
 from opendbc.car.toyota.values import ToyotaSafetyFlags
@@ -192,6 +192,10 @@ def can_fingerprint(can_recv: CanRecvCallable) -> tuple[str | None, dict[int, di
         if len(candidate_cars[b]) == 1 and frame > FRAME_FINGERPRINT:
           # fingerprint done
           car_fingerprint = candidate_cars[b][0]
+        elif len(candidate_cars[b]) > 1 and frame > FRAME_FINGERPRINT * 2:
+          exact_matches = exact_fingerprint_matches(finger.get(b, {}), candidate_cars[b])
+          if len(exact_matches) == 1:
+            car_fingerprint = exact_matches[0]
 
       # bail if no cars left or we've been waiting for more than 2s
       failed = (all(len(cc) == 0 for cc in candidate_cars.values()) and frame > FRAME_FINGERPRINT) or frame > 200

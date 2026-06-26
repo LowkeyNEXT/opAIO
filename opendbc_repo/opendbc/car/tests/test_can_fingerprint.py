@@ -4,9 +4,17 @@ import pytest
 from opendbc.car.can_definitions import CanData
 from opendbc.car.car_helpers import FRAME_FINGERPRINT, _apply_starpilot_access_policy, _get_gm_stored_candidate_fallback, can_fingerprint
 from opendbc.car.fingerprints import _FINGERPRINTS as FINGERPRINTS
+from opendbc.car.gm.values import CAR as GM
 
 
 class TestCanFingerprint:
+  @staticmethod
+  def _fingerprint_from_can(fingerprint):
+    can = [CanData(address=address, dat=b'\x00' * length, src=src)
+           for address, length in fingerprint.items() for src in (0, 1)]
+    fingerprint_iter = iter([can])
+    return can_fingerprint(lambda **kwargs: [next(fingerprint_iter, [])])  # noqa: B023
+
   @pytest.mark.parametrize("car_model, fingerprints", FINGERPRINTS.items())
   def test_can_fingerprint(self, car_model, fingerprints):
     """Tests online fingerprinting function on offline fingerprints"""
@@ -22,6 +30,18 @@ class TestCanFingerprint:
       assert finger[0] == fingerprint
       assert finger[1] == fingerprint
       assert finger[2] == {}
+
+  def test_exact_fingerprint_preferred_over_gm_sascm_superset(self):
+    car_fingerprint, finger = self._fingerprint_from_can(FINGERPRINTS[GM.CADILLAC_ESCALADE_ESV_2019][0])
+
+    assert car_fingerprint == GM.CADILLAC_ESCALADE_ESV_2019
+    assert 0x2FF not in finger[0]
+
+  def test_gm_sascm_superset_fingerprint_matches_ascm_variant(self):
+    car_fingerprint, finger = self._fingerprint_from_can(FINGERPRINTS[GM.CADILLAC_ESCALADE_ESV_2019_ASCM][0])
+
+    assert car_fingerprint == GM.CADILLAC_ESCALADE_ESV_2019_ASCM
+    assert finger[0][0x2FF] == 8
 
   def test_timing(self, subtests):
     # just pick any CAN fingerprinting car

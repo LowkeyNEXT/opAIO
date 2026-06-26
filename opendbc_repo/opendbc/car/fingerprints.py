@@ -48,6 +48,13 @@ def eliminate_incompatible_cars(msg, candidate_cars):
   return compatible_cars
 
 
+def exact_fingerprint_matches(car_fingerprint: dict[int, int], candidate_cars):
+  return [
+    car_name for car_name in candidate_cars
+    if any(car_fingerprint == fingerprint for fingerprint in _FINGERPRINTS[car_name])
+  ]
+
+
 def all_legacy_fingerprint_cars():
   """Returns a list of all known car strings, FPv1 only."""
   return list(_FINGERPRINTS.keys())
