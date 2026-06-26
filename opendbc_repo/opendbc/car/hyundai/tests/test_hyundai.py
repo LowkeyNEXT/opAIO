@@ -1217,6 +1217,37 @@ class TestHyundaiFingerprint:
     assert lead_distance == pytest.approx(20.0)
     assert lead_rel_speed == pytest.approx(0.0)
 
+  def test_canfd_stock_dash_icons_match_lateral_state_when_enabled(self):
+    CP = CarParams.new_message()
+    CP.carFingerprint = CAR.KIA_EV6
+    CP.flags = int(HyundaiFlags.CANFD)
+
+    controller = CarController(DBC[CP.carFingerprint], CP)
+
+    assert controller._update_dash_icon_state(SimpleNamespace(enabled=False, latActive=False), make_dash_stock=True) == (1, 1)
+    assert controller._update_dash_icon_state(SimpleNamespace(enabled=False, latActive=True), make_dash_stock=True) == (2, 2)
+
+    controller.frame += 1
+    assert controller._update_dash_icon_state(SimpleNamespace(enabled=False, latActive=False), make_dash_stock=True) == (1, 1)
+
+  def test_canfd_default_dash_icons_keep_disengage_blink(self):
+    CP = CarParams.new_message()
+    CP.carFingerprint = CAR.KIA_EV6
+    CP.flags = int(HyundaiFlags.CANFD)
+
+    controller = CarController(DBC[CP.carFingerprint], CP)
+
+    assert controller._update_dash_icon_state(SimpleNamespace(enabled=False, latActive=False)) == (1, 0)
+    assert controller._update_dash_icon_state(SimpleNamespace(enabled=False, latActive=True)) == (2, 2)
+
+    controller.frame += 1
+    assert controller._update_dash_icon_state(SimpleNamespace(enabled=False, latActive=False)) == (3, 3)
+
+  def test_canfd_stock_dash_acc_main_mode_tracks_enabled_state(self):
+    assert CarController._get_canfd_main_mode_acc(enabled=False, cruise_available=True, make_dash_stock=True) == 0
+    assert CarController._get_canfd_main_mode_acc(enabled=True, cruise_available=False, make_dash_stock=True) == 1
+    assert CarController._get_canfd_main_mode_acc(enabled=False, cruise_available=True, make_dash_stock=False) == 1
+
   def test_can_acc_commands_use_default_values(self):
     CP = CarParams.new_message()
     CP.carFingerprint = CAR.GENESIS_G90
@@ -1386,6 +1417,25 @@ class TestHyundaiFingerprint:
     assert parser.can_valid
     assert parser.vl["LFA"]["LKA_ICON"] == 3
 
+  def test_ioniq_6_lfa_helper_defaults_lka_icon_grey_when_enabled_false(self):
+    CP = CarParams.new_message()
+    CP.carFingerprint = CAR.HYUNDAI_IONIQ_6
+    CP.flags = int(HyundaiFlags.CANFD | HyundaiFlags.CANFD_LKA_STEERING)
+    CP.openpilotLongitudinalControl = True
+
+    packer = CANPacker(DBC[CP.carFingerprint][Bus.pt])
+    can_bus = CanBus(CP)
+    parser = CANParser(DBC[CP.carFingerprint][Bus.pt], [("LFA", 0)], can_bus.ECAN)
+
+    msgs = hyundaicanfd.create_steering_messages(packer, CP, can_bus, False, True, 0, 0.0)
+    lfa_msgs = [msg for msg in msgs if msg[0] == 0x12A]
+    assert len(lfa_msgs) == 1
+
+    parser.update([(1, lfa_msgs)])
+
+    assert parser.can_valid
+    assert parser.vl["LFA"]["LKA_ICON"] == 1
+
   def test_kia_ev6_lfa_helper_preserves_stock_ui_fields_with_stock_long(self):
     CP = CarParams.new_message()
     CP.carFingerprint = CAR.KIA_EV6
@@ -1526,6 +1576,41 @@ class TestHyundaiFingerprint:
 
     assert parser.can_valid
     assert parser.vl["LFAHDA_CLUSTER"]["LFA_ICON"] == 3
+
+  def test_ioniq_6_lfahda_cluster_defaults_to_hidden_when_inactive(self):
+    CP = CarParams.new_message()
+    CP.carFingerprint = CAR.HYUNDAI_IONIQ_6
+    CP.flags = int(HyundaiFlags.CANFD | HyundaiFlags.CANFD_LKA_STEERING)
+
+    packer = CANPacker(DBC[CP.carFingerprint][Bus.pt])
+    can_bus = CanBus(CP)
+    parser = CANParser(DBC[CP.carFingerprint][Bus.pt], [("LFAHDA_CLUSTER", 0)], can_bus.ECAN)
+
+    msg = hyundaicanfd.create_lfahda_cluster(packer, can_bus, False)
+    parser.update([(1, [msg])])
+
+    assert parser.can_valid
+    assert parser.vl["LFAHDA_CLUSTER"]["LFA_ICON"] == 0
+
+  def test_canfd_fca_warning_light_sets_aeb_setting(self):
+    CP = CarParams.new_message()
+    CP.carFingerprint = CAR.HYUNDAI_IONIQ_6
+    CP.flags = int(HyundaiFlags.CANFD | HyundaiFlags.CANFD_LKA_STEERING)
+
+    packer = CANPacker(DBC[CP.carFingerprint][Bus.pt])
+    can_bus = CanBus(CP)
+    parser = CANParser(DBC[CP.carFingerprint][Bus.pt], [("ADRV_0x160", 0)], can_bus.ECAN)
+
+    msgs = hyundaicanfd.create_fca_warning_light(packer, can_bus, frame=0)
+    parser.update([(1, msgs)])
+
+    assert parser.can_valid
+    assert parser.vl["ADRV_0x160"]["AEB_SETTING"] == 1
+
+    msgs = hyundaicanfd.create_fca_warning_light(packer, can_bus, frame=2, aeb_setting=0)
+    parser.update([(2, msgs)])
+
+    assert parser.vl["ADRV_0x160"]["AEB_SETTING"] == 0
 
   def test_g90_lfahda_mfc_allows_lfa_icon_override(self):
     CP = CarParams.new_message()

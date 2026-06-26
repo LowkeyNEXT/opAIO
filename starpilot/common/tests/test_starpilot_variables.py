@@ -115,6 +115,13 @@ def test_favorite_button_flags_map_to_three_slots():
   assert toggle.favorite_3_via_lkas is False
 
 
+def test_hkg_make_dash_stock_requires_hyundai_canfd_and_enabled_param():
+  assert spv.hkg_make_dash_stock_enabled("hyundai", int(spv.HyundaiFlags.CANFD), True) is True
+  assert spv.hkg_make_dash_stock_enabled("hyundai", 0, True) is False
+  assert spv.hkg_make_dash_stock_enabled("gm", int(spv.HyundaiFlags.CANFD), True) is False
+  assert spv.hkg_make_dash_stock_enabled("hyundai", int(spv.HyundaiFlags.CANFD), False) is False
+
+
 def test_set_speed_limit_available_on_openpilot_longitudinal():
   assert spv.set_speed_limit_available(openpilot_longitudinal=True, has_cc_long=False, pcm_cruise_speed=True) is True
 

@@ -343,6 +343,10 @@ def set_speed_limit_available(openpilot_longitudinal: bool, has_cc_long: bool, p
   return openpilot_longitudinal or has_cc_long or not pcm_cruise_speed
 
 
+def hkg_make_dash_stock_enabled(car_make: str, flags: int, param_enabled: bool) -> bool:
+  return car_make == "hyundai" and bool(flags & HyundaiFlags.CANFD.value) and param_enabled
+
+
 def migrate_cancel_button_controls(params: Params | None = None) -> bool:
   params = params or Params(return_defaults=True)
   if params.get_bool(CANCEL_BUTTON_MIGRATION_KEY) or not params.get_bool("RemapCancelToDistance"):
@@ -1004,6 +1008,11 @@ class StarPilotVariables:
     self.set_favorite_button_flags(toggle, "lkas", lkas_button_control)
 
     has_canfd_media_buttons = toggle.car_make == "hyundai" and bool(CP.flags & HyundaiFlags.CANFD)
+    toggle.make_dash_stock = hkg_make_dash_stock_enabled(
+      toggle.car_make,
+      CP.flags,
+      self.get_value("HKGMakeDashStock", condition=has_canfd_media_buttons),
+    )
     mode_button_control = self.get_button_function("ModeButtonControl", condition=has_canfd_media_buttons)
     toggle.experimental_mode_via_mode = toggle.openpilot_longitudinal and mode_button_control == BUTTON_FUNCTIONS["EXPERIMENTAL_MODE"]
     toggle.experimental_mode_via_press |= toggle.experimental_mode_via_mode

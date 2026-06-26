@@ -24,6 +24,7 @@ private:
   std::map<QString, AbstractControl*> toggles;
 
   QSet<QString> gmKeys = {"GMPedalLongitudinal", "GMDashSpoofOffsets", "LongPitch", "RemoteStartBootsComma", "RemapCancelToDistance", "VoltSNG"};
+  QSet<QString> hkgKeys = {"HKGMakeDashStock"};
   QSet<QString> longitudinalKeys = {"FrogsGoMoosTweak", "GMDashSpoofOffsets", "LongPitch", "RemapCancelToDistance", "SNGHack", "VoltSNG"};
   QSet<QString> subaruKeys = {"SubaruSNG", "SubaruSNGManualParkingBrake"};
   QSet<QString> toyotaKeys = {"ClusterOffset", "FrogsGoMoosTweak", "LockDoorsTimer", "SNGHack", "ToyotaDoors"};

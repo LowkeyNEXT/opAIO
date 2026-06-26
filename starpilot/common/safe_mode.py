@@ -189,6 +189,7 @@ SAFE_MODE_MANAGED_KEYS = (
   "VoltOnePedalMode",
   "GMPedalLongitudinal",
   "GMDashSpoofOffsets",
+  "HKGMakeDashStock",
   "LongPitch",
 )
 

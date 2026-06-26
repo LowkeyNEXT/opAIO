@@ -37,7 +37,7 @@ from openpilot.selfdrive.ui.lib.fingerprint_catalog import (
   get_fingerprint_catalog,
   shorten_model_label,
 )
-from openpilot.starpilot.common.starpilot_variables import migrate_cancel_button_controls
+from openpilot.starpilot.common.starpilot_variables import migrate_cancel_button_controls, update_starpilot_toggles
 
 
 ACTION_OPTIONS = [
@@ -198,6 +198,14 @@ class VehicleSettingsManagerView(PanelManagerView):
         "subtitle": tr("Treat the Cancel button as an extra mappable steering-wheel button."),
         "get_state": lambda: self._controller._params.get_bool("RemapCancelToDistance"),
         "set_state": lambda s: self._controller._on_toggle("RemapCancelToDistance"),
+      })
+
+    if cs.isHKGCanFd:
+      toggles.append({
+        "title": tr("Make Dash Stock"),
+        "subtitle": tr("Use stock-like Hyundai CAN-FD dash icons and hide inactive ACC/AEB warnings."),
+        "get_state": lambda: self._controller._params.get_bool("HKGMakeDashStock"),
+        "set_state": lambda s: self._controller._on_toggle("HKGMakeDashStock"),
       })
 
     if cs.isHKGCanFd and cs.hasOpenpilotLongitudinal:
@@ -547,6 +555,8 @@ class StarPilotVehicleSettingsLayout(_SettingsPage):
       return
     current = self._params.get_bool(param_key) if self._params.get(param_key) is not None else False
     self._params.put_bool(param_key, not current)
+    if param_key == "HKGMakeDashStock":
+      update_starpilot_toggles()
     starpilot_state.update(force=True)
     if param_key == "ForceFingerprint":
       self._manager_view._rebuild_toggle_grid()

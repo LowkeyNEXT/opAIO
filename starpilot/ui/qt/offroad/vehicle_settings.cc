@@ -155,16 +155,19 @@ StarPilotVehiclesPanel::StarPilotVehiclesPanel(StarPilotSettingsWindow *parent, 
   settingsList->addItem(disableOpenpilotLong);
 
   StarPilotListWidget *gmList = new StarPilotListWidget(this);
+  StarPilotListWidget *hkgList = new StarPilotListWidget(this);
   StarPilotListWidget *subaruList = new StarPilotListWidget(this);
   StarPilotListWidget *toyotaList = new StarPilotListWidget(this);
   StarPilotListWidget *vehicleInfoList = new StarPilotListWidget(this);
 
   ScrollView *gmPanel = new ScrollView(gmList, this);
+  ScrollView *hkgPanel = new ScrollView(hkgList, this);
   ScrollView *subaruPanel = new ScrollView(subaruList, this);
   ScrollView *toyotaPanel = new ScrollView(toyotaList, this);
   ScrollView *vehicleInfoPanel = new ScrollView(vehicleInfoList, this);
 
   vehiclesLayout->addWidget(gmPanel);
+  vehiclesLayout->addWidget(hkgPanel);
   vehiclesLayout->addWidget(subaruPanel);
   vehiclesLayout->addWidget(toyotaPanel);
   vehiclesLayout->addWidget(vehicleInfoPanel);
@@ -177,6 +180,10 @@ StarPilotVehiclesPanel::StarPilotVehiclesPanel(StarPilotSettingsWindow *parent, 
     {"RemoteStartBootsComma", tr("Remote Start Boots comma"), tr("<b>Use the remote-start GM panda firmware at boot.</b><br><br>Required for GM remote-start startup signal behavior."), ""},
     {"RemapCancelToDistance", tr("Remap Cancel Button"), tr("<b>On pedal-interceptor Bolts, treat the steering-wheel CANCEL button as an extra mappable button.</b>"), ""},
     {"VoltSNG", tr("Stop-and-Go Hack"), tr("<b>Force stop-and-go</b> on the 2017 Chevy Volt."), ""},
+
+
+    {"HKGToggles", tr("Hyundai/Kia/Genesis Settings"), tr("<b>StarPilot features for Hyundai CAN-FD vehicles.</b>"), ""},
+    {"HKGMakeDashStock", tr("Make Dash Stock"), tr("<b>Make the Hyundai CAN-FD dashboard behave closer to stock.</b> Shows grey lane-assist icons when inactive, green when openpilot or Always On Lateral is active, hides inactive ACC main state, and suppresses the AEB disabled icon."), ""},
 
 
     {"SubaruToggles", tr("Subaru Settings"), tr("<b>StarPilot features for Subaru vehicles.</b>"), ""},
@@ -210,6 +217,14 @@ StarPilotVehiclesPanel::StarPilotVehiclesPanel(StarPilotSettingsWindow *parent, 
         vehiclesLayout->setCurrentWidget(gmPanel);
       });
       vehicleToggle = gmButton;
+
+    } else if (param == "HKGToggles") {
+      ButtonControl *hkgButton = new ButtonControl(title, tr("MANAGE"), desc);
+      QObject::connect(hkgButton, &ButtonControl::clicked, [vehiclesLayout, hkgPanel, this]() {
+        openDescriptions(forceOpenDescriptions, toggles);
+        vehiclesLayout->setCurrentWidget(hkgPanel);
+      });
+      vehicleToggle = hkgButton;
 
     } else if (param == "SubaruToggles") {
       ButtonControl *subaruButton = new ButtonControl(title, tr("MANAGE"), desc);
@@ -263,6 +278,8 @@ StarPilotVehiclesPanel::StarPilotVehiclesPanel(StarPilotSettingsWindow *parent, 
 
     if (gmKeys.contains(param)) {
       gmList->addItem(vehicleToggle);
+    } else if (hkgKeys.contains(param)) {
+      hkgList->addItem(vehicleToggle);
     } else if (subaruKeys.contains(param)) {
       subaruList->addItem(vehicleToggle);
     } else if (toyotaKeys.contains(param)) {
@@ -299,6 +316,10 @@ StarPilotVehiclesPanel::StarPilotVehiclesPanel(StarPilotSettingsWindow *parent, 
       }
     });
   }
+
+  QObject::connect(static_cast<ToggleControl*>(toggles["HKGMakeDashStock"]), &ToggleControl::toggleFlipped, []() {
+    updateStarPilotToggles();
+  });
 
   ParamControl *remoteStartToggle = static_cast<ParamControl*>(toggles["RemoteStartBootsComma"]);
   QObject::connect(remoteStartToggle, &ToggleControl::toggleFlipped, [parent, remoteStartToggle, this](bool state) {
@@ -388,6 +409,8 @@ void StarPilotVehiclesPanel::updateToggles() {
     if (!showAllToggles) {
       if (gmKeys.contains(key)) {
         setVisible &= parent->isGM;
+      } else if (hkgKeys.contains(key)) {
+        setVisible &= parent->isHKGCanFd;
       } else if (subaruKeys.contains(key)) {
         setVisible &= parent->isSubaru;
       } else if (toyotaKeys.contains(key)) {
@@ -434,6 +457,8 @@ void StarPilotVehiclesPanel::updateToggles() {
     if (setVisible) {
       if (gmKeys.contains(key)) {
         toggles["GMToggles"]->setVisible(true);
+      } else if (hkgKeys.contains(key)) {
+        toggles["HKGToggles"]->setVisible(true);
       } else if (subaruKeys.contains(key)) {
         toggles["SubaruToggles"]->setVisible(true);
       } else if (toyotaKeys.contains(key)) {

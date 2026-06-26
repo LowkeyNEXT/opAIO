@@ -2516,6 +2516,13 @@
         "ui_type": "toggle"
       },
       {
+        "key": "HKGMakeDashStock",
+        "label": "Make Dash Stock",
+        "description": "Use stock-like Hyundai CAN-FD dash icons and hide inactive ACC/AEB warnings.",
+        "data_type": "bool",
+        "ui_type": "toggle"
+      },
+      {
         "key": "SubaruSNG",
         "label": "Stop and Go",
         "description": "Stop and go for supported Subaru vehicles.",

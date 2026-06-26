@@ -272,7 +272,14 @@ class CarController(CarControllerBase):
     self._dash_lat_disengage_init = False
     self._dash_prev_lat_active = False
 
-  def _update_dash_icon_state(self, CC):
+  def _update_dash_icon_state(self, CC, make_dash_stock=False):
+    if make_dash_stock:
+      self._dash_lat_disengage_init = False
+      self._dash_lat_disengage_blink_frame = self.frame
+      self._dash_prev_lat_active = CC.latActive
+      icon = 2 if (CC.enabled or CC.latActive) else 1
+      return icon, icon
+
     if CC.latActive:
       self._dash_lat_disengage_init = False
     elif self._dash_prev_lat_active:
@@ -289,6 +296,10 @@ class CarController(CarControllerBase):
     lfa_icon = 2 if lat_or_enabled else 3 if disengaging else 0
 
     return lka_icon, lfa_icon
+
+  @staticmethod
+  def _get_canfd_main_mode_acc(enabled, cruise_available, make_dash_stock):
+    return int(enabled) if make_dash_stock else int(cruise_available)
 
   def _get_canfd_scc_lead_state(self, CC, CS, now_nanos):
     openpilot_lead_visible = bool(getattr(CS, "openpilot_lead_visible", False) or CC.hudControl.leadVisible)
@@ -352,7 +363,8 @@ class CarController(CarControllerBase):
   def update(self, CC, CS, now_nanos, starpilot_toggles):
     actuators = CC.actuators
     hud_control = CC.hudControl
-    lka_icon, lfa_icon = self._update_dash_icon_state(CC)
+    make_dash_stock = bool(self.CP.flags & HyundaiFlags.CANFD and getattr(starpilot_toggles, "make_dash_stock", False))
+    lka_icon, lfa_icon = self._update_dash_icon_state(CC, make_dash_stock)
 
     if not self.CP.flags & HyundaiFlags.CANFD_ANGLE_STEERING:
       self.params = CarControllerParams(self.CP, CS.out.vEgoRaw)
@@ -563,6 +575,9 @@ class CarController(CarControllerBase):
                         hud_control, CS, CC, starpilot_toggles, lka_icon, lfa_icon):
     can_sends = []
 
+    make_dash_stock = bool(getattr(starpilot_toggles, "make_dash_stock", False))
+    # 0x1 explicitly shows disabled AEB/FCA; stock dash mode uses 0x0 to match stock.
+    aeb_setting = 0x0 if make_dash_stock else 0x1
     lka_steering = self.CP.flags & HyundaiFlags.CANFD_LKA_STEERING
     lka_steering_long = lka_steering and self.long_active_ecu
     ccnc_non_hda2 = self.CP.flags & HyundaiFlags.CCNC and not lka_steering
@@ -620,14 +635,16 @@ class CarController(CarControllerBase):
 
     if self.long_active_ecu:
       if lka_steering:
-        can_sends.extend(hyundaicanfd.create_adrv_messages(self.packer, self.CAN, self.frame))
+        can_sends.extend(hyundaicanfd.create_adrv_messages(self.packer, self.CAN, self.frame,
+                                                           aeb_setting=aeb_setting))
         # Ioniq 5/6: front radar treats ADAS_DRV's 0x100 broadcast as its host heartbeat
         # and stops publishing object tracks when it disappears. Spoof it periodically on
         # PT bus so the radar keeps tracking.
         if self.CP.carFingerprint in CANFD_RADAR_LIVE_LONGITUDINAL_CAR and self.frame % 4 == 0:
           can_sends.append(hyundaicanfd.create_accelerator_brake_alt_spoof(0, self.frame // 4, CS.out.brakePressed, CS.out.gasPressed))
       elif not ccnc_non_hda2:
-        can_sends.extend(hyundaicanfd.create_fca_warning_light(self.packer, self.CAN, self.frame))
+        can_sends.extend(hyundaicanfd.create_fca_warning_light(self.packer, self.CAN, self.frame,
+                                                               aeb_setting=aeb_setting))
       if self.CP.carFingerprint == CAR.HYUNDAI_IONIQ_6 and self.frame % 5 == 0:
         rear_stale = now_nanos - CS.blindspots_rear_corners_ts > CANFD_BLINDSPOT_STATUS_STALE_NS
         front_stale = now_nanos - CS.blindspots_front_corner_1_ts > CANFD_BLINDSPOT_STATUS_STALE_NS
@@ -648,7 +665,7 @@ class CarController(CarControllerBase):
       if self.frame % 2 == 0:
         lead_visible, lead_distance, lead_rel_speed = self._get_canfd_scc_lead_state(CC, CS, now_nanos)
         acc_kwargs = {
-          "main_mode_acc": int(CS.out.cruiseState.available),
+          "main_mode_acc": self._get_canfd_main_mode_acc(CC.enabled, CS.out.cruiseState.available, make_dash_stock),
           "direct_accel": True,
           "jerk_lower": 5.0,
           "jerk_upper": 3.0 if CC.actuators.longControlState == LongCtrlState.pid else 1.0,
