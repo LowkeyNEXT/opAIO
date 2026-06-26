@@ -408,10 +408,10 @@ class StarPilotVariables:
     HD_PATH.parent.mkdir(parents=True, exist_ok=True)
     if not HD_PATH.is_file() and toggle.use_higher_bitrate:
       HD_PATH.touch()
-      HARDWARE.reboot()
+      self.params.put_bool("DoReboot", True)
     elif HD_PATH.is_file() and not toggle.use_higher_bitrate:
       HD_PATH.unlink()
-      HARDWARE.reboot()
+      self.params.put_bool("DoReboot", True)
 
     toggle.use_konik_server = device_management
     toggle.use_konik_server &= self.get_value("UseKonikServer")
@@ -419,10 +419,10 @@ class StarPilotVariables:
     KONIK_PATH.parent.mkdir(parents=True, exist_ok=True)
     if not KONIK_PATH.is_file() and toggle.use_konik_server:
       KONIK_PATH.touch()
-      HARDWARE.reboot()
+      self.params.put_bool("DoReboot", True)
     elif KONIK_PATH.is_file() and not toggle.use_konik_server:
       KONIK_PATH.unlink()
-      HARDWARE.reboot()
+      self.params.put_bool("DoReboot", True)
 
     stock_colors_json = (STOCK_THEME_PATH / "colors/colors.json")
     self.stock_colors = json.loads(stock_colors_json.read_text()) if stock_colors_json.is_file() else {}

@@ -140,7 +140,7 @@ StarPilotVehiclesPanel::StarPilotVehiclesPanel(StarPilotSettingsWindow *parent, 
       if (StarPilotConfirmationDialog::yesorno(tr("Are you sure you want to completely disable openpilot longitudinal control?"), this)) {
         if (started) {
           if (StarPilotConfirmationDialog::toggleReboot(this)) {
-            Hardware::reboot();
+            params.putBool("DoReboot", true);
           }
         }
       } else {
@@ -309,11 +309,11 @@ StarPilotVehiclesPanel::StarPilotVehiclesPanel(StarPilotSettingsWindow *parent, 
   QSet<QString> rebootKeys = {"RemapCancelToDistance"};
   for (const QString &key : rebootKeys) {
     QObject::connect(static_cast<ToggleControl*>(toggles[key]), &ToggleControl::toggleFlipped, [key, this](bool state) {
-      if (started) {
-        if (StarPilotConfirmationDialog::toggleReboot(this)) {
-          Hardware::reboot();
-        }
+    if (started) {
+      if (StarPilotConfirmationDialog::toggleReboot(this)) {
+        params.putBool("DoReboot", true);
       }
+    }
     });
   }
 
@@ -336,7 +336,7 @@ StarPilotVehiclesPanel::StarPilotVehiclesPanel(StarPilotSettingsWindow *parent, 
       while (params_memory.getBool("FlashPanda")) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
       }
-      Hardware::reboot();
+      params.putBool("DoReboot", true);
     }).detach();
   });
 

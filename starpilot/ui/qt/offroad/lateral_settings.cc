@@ -193,11 +193,11 @@ StarPilotLateralPanel::StarPilotLateralPanel(StarPilotSettingsWindow *parent, bo
       if (started) {
         if (key == "AlwaysOnLateral" && state) {
           if (StarPilotConfirmationDialog::toggleReboot(this)) {
-            Hardware::reboot();
+            params.putBool("DoReboot", true);
           }
         } else if (key != "AlwaysOnLateral") {
           if (StarPilotConfirmationDialog::toggleReboot(this)) {
-            Hardware::reboot();
+            params.putBool("DoReboot", true);
           }
         }
       }

@@ -31,7 +31,7 @@ StarPilotUtilitiesPanel::StarPilotUtilitiesPanel(StarPilotSettingsWindow *parent
 
         util::sleep_for(2500);
 
-        Hardware::reboot();
+        params.putBool("DoReboot", true);
       }).detach();
     }
   });

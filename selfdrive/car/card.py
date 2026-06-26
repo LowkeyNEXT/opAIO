@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import math
 import os
+import signal
 import time
 import threading
 
@@ -24,6 +25,7 @@ from openpilot.common.constants import CV
 from openpilot.selfdrive.car.cruise import VCruiseHelper, IMPERIAL_INCREMENT, V_CRUISE_MAX, V_CRUISE_MIN
 from openpilot.selfdrive.car.redneck_cruise import RedneckCruise, select_redneck_target_speed
 from openpilot.selfdrive.car.car_specific import MockCarState
+from openpilot.selfdrive.car.shutdown_policy import should_deinit_on_shutdown
 
 from openpilot.starpilot.common.starpilot_variables import get_starpilot_toggles, update_starpilot_toggles
 from openpilot.starpilot.controls.starpilot_card import StarPilotCard
@@ -84,6 +86,9 @@ class Car:
     self.CC_prev = car.CarControl.new_message()
     self.CS_prev = car.CarState.new_message()
     self.initialized_prev = False
+    self.interface_initialized = False
+    self.interface_deinitialized = False
+    self.shutdown_event = threading.Event()
 
     self.last_actuators_output = structs.CarControl.Actuators()
 
@@ -319,6 +324,7 @@ class Car:
       # TODO: this can make us miss at least a few cycles when doing an ECU knockout
       was_openpilot_long = self.CP.openpilotLongitudinalControl
       self.CI.init(self.CP, *self.can_callbacks)
+      self.interface_initialized = True
       # If ECU disable was skipped/failed, strip LONG safety flag from BOTH CarParams
       # and StarPilotCarParams (pandad ORs both safetyParams together)
       # Use the pre-init longitudinal state here, since Hyundai init() may already
@@ -431,17 +437,43 @@ class Car:
       self.experimental_mode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl and not self.safe_mode
       time.sleep(0.1)
 
+  def _request_shutdown(self, signum: int, _frame) -> None:
+    cloudlog.warning(f"card received shutdown signal {signum}; requesting interface deinit")
+    self.shutdown_event.set()
+
+  def deinit_interface(self) -> bool:
+    if self.interface_deinitialized or not self.interface_initialized or not should_deinit_on_shutdown(self.CP):
+      return False
+
+    self.interface_deinitialized = True
+    try:
+      cloudlog.warning("deinitializing car interface before card shutdown")
+      self.CI.deinit(self.CP, *self.can_callbacks)
+      return True
+    except Exception:
+      cloudlog.exception("failed to deinitialize car interface before card shutdown")
+      return False
+
   def card_thread(self):
     e = threading.Event()
     t = threading.Thread(target=self.params_thread, args=(e, ))
+    previous_signal_handlers = {}
     try:
+      if threading.current_thread() is threading.main_thread():
+        for sig in (signal.SIGINT, signal.SIGTERM):
+          previous_signal_handlers[sig] = signal.getsignal(sig)
+          signal.signal(sig, self._request_shutdown)
+
       t.start()
-      while True:
+      while not self.shutdown_event.is_set():
         self.step()
         self.rk.monitor_time()
     finally:
+      self.deinit_interface()
       e.set()
       t.join()
+      for sig, handler in previous_signal_handlers.items():
+        signal.signal(sig, handler)
 
 
 def main():

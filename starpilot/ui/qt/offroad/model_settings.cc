@@ -533,7 +533,7 @@ StarPilotModelPanel::StarPilotModelPanel(StarPilotSettingsWindow *parent) : Star
 
             if (started) {
               if (StarPilotConfirmationDialog::toggleReboot(this)) {
-                Hardware::reboot();
+                params.putBool("DoReboot", true);
               }
             }
             selectModelButton->setValue(modelToSelect);

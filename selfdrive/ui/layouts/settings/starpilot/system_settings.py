@@ -948,7 +948,7 @@ class StarPilotSystemLayout(_SettingsPage):
         gui_app.push_widget(
           ConfirmDialog(
             tr("Reboot required. Reboot now?"), tr("Reboot"), tr("Cancel"),
-            callback=lambda res: HARDWARE.reboot() if res == DialogResult.CONFIRM else None
+            callback=lambda res: self._params.put_bool("DoReboot", True) if res == DialogResult.CONFIRM else None
           )
         )
 
@@ -976,7 +976,7 @@ class StarPilotSystemLayout(_SettingsPage):
     if ui_state.started:
       gui_app.push_widget(
         ConfirmDialog(
-          tr("Reboot required. Reboot now?"), tr("Reboot"), tr("Cancel"), callback=lambda res: HARDWARE.reboot() if res == DialogResult.CONFIRM else None
+          tr("Reboot required. Reboot now?"), tr("Reboot"), tr("Cancel"), callback=lambda res: self._params.put_bool("DoReboot", True) if res == DialogResult.CONFIRM else None
         )
       )
 

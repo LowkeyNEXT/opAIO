@@ -189,7 +189,7 @@ StarPilotVisualsPanel::StarPilotVisualsPanel(StarPilotSettingsWindow *parent, bo
   static_cast<ParamControl*>(toggles["DisableWideRoad"])->setConfirmation(true, false);
   QObject::connect(static_cast<ToggleControl*>(toggles["DisableWideRoad"]), &ToggleControl::toggleFlipped, [this](bool state) {
     if (StarPilotConfirmationDialog::toggleReboot(this)) {
-      Hardware::reboot();
+      params.putBool("DoReboot", true);
     }
   });
 

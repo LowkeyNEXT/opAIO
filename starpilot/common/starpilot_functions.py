@@ -302,4 +302,4 @@ def update_openpilot(thread_manager, params):
   while params.get_bool("IsOnroad") or thread_manager.is_thread_alive("lock_doors"):
     time.sleep(60)
 
-  HARDWARE.reboot()
+  params.put_bool("DoReboot", True)

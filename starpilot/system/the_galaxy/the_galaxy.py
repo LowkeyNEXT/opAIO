@@ -1574,6 +1574,15 @@ def _run_submodule_update_if_needed(repo_path, step=4):
   if submodule_rc != 0:
     raise RuntimeError(submodule_output.strip() or "git submodule update failed")
 
+def _request_manager_reboot():
+  try:
+    params.put_bool("DoReboot", True)
+    return
+  except Exception as exception:
+    print(f"Manager reboot request failed: {exception}")
+
+  HARDWARE.reboot()
+
 def _finish_update_and_reboot(message):
   _set_fast_update_progress(5, "Rebooting device", 100.0, "Update complete. Please wait for device to reboot.")
   _set_fast_update_state(
@@ -1584,7 +1593,7 @@ def _finish_update_and_reboot(message):
   )
   # Keep the service online briefly so the UI can fetch and render the reboot notice.
   time.sleep(_FAST_UPDATE_REBOOT_NOTICE_SECONDS)
-  HARDWARE.reboot()
+  _request_manager_reboot()
 
 def _set_fast_update_error_state(message, exception):
   error_text = str(exception).strip() or "Unknown error"
@@ -6526,12 +6535,12 @@ def setup(app):
   @app.route("/api/toggles/reset_default", methods=["POST"])
   def reset_toggle_values():
     params.put_bool("DoToggleReset", True)
-    HARDWARE.reboot()
+    _request_manager_reboot()
 
   @app.route("/api/toggles/reset_stock", methods=["POST"])
   def reset_toggle_values_to_stock():
     params.put_bool("DoToggleResetStock", True)
-    HARDWARE.reboot()
+    _request_manager_reboot()
 
   @app.route("/mapbox-help/<path:filename>", methods=["GET"])
   def serve_mapbox_help(filename):

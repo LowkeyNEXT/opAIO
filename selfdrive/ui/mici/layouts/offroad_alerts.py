@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from enum import IntEnum
 from openpilot.common.params import Params
 from openpilot.selfdrive.selfdrived.alertmanager import OFFROAD_ALERTS
-from openpilot.system.hardware import HARDWARE
 from openpilot.system.ui.widgets import Widget
 from openpilot.system.ui.widgets.label import UnifiedLabel
 from openpilot.system.ui.widgets.scroller import Scroller
@@ -219,7 +218,7 @@ class MiciOffroadAlerts(Scroller):
     update_alert_data = AlertData(key="UpdateAvailable", text="", severity=-1)
     self.sorted_alerts.append(update_alert_data)
     update_alert_item = AlertItem(update_alert_data)
-    update_alert_item.set_click_callback(lambda: HARDWARE.reboot())
+    update_alert_item.set_click_callback(lambda: self.params.put_bool("DoReboot", True))
     self.alert_items.append(update_alert_item)
     self._scroller.add_widget(update_alert_item)
 

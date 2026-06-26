@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pyray as rl
 
-from openpilot.system.hardware import HARDWARE
 from openpilot.system.ui.lib.application import FontWeight, gui_app
 from openpilot.system.ui.lib.multilang import tr, tr_noop
 from openpilot.system.ui.widgets import DialogResult, Widget
@@ -540,7 +539,7 @@ class StarPilotVehicleSettingsLayout(_SettingsPage):
             self._params.put_bool("DisableOpenpilotLongitudinal", True)
             starpilot_state.update(force=True)
             if starpilot_state.started:
-              HARDWARE.reboot()
+              self._params.put_bool("DoReboot", True)
         gui_app.push_widget(ConfirmDialog(tr("Disable openpilot longitudinal control?"), tr("Disable"), callback=on_confirm))
       else:
         self._params.put_bool("DisableOpenpilotLongitudinal", False)

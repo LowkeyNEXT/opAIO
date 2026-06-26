@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pyray as rl
 
-from openpilot.system.hardware import HARDWARE
 from openpilot.selfdrive.ui.lib.starpilot_state import starpilot_state
 from openpilot.system.ui.lib.application import gui_app
 from openpilot.system.ui.lib.multilang import tr
@@ -32,7 +31,7 @@ def _confirm_reboot_toggle(params, key, state):
   if ui_state.started:
     gui_app.push_widget(ConfirmDialog(
       tr("Reboot required. Reboot now?"), tr("Reboot"), tr("Cancel"),
-      callback=lambda res: HARDWARE.reboot() if res == DialogResult.CONFIRM else None,
+      callback=lambda res: params.put_bool("DoReboot", True) if res == DialogResult.CONFIRM else None,
     ))
 
 

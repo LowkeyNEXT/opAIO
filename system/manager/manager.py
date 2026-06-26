@@ -23,6 +23,7 @@ from openpilot.system.athena.registration import register, UNREGISTERED_DONGLE_I
 from openpilot.common.swaglog import cloudlog, add_file_handler
 from openpilot.system.version import get_build_metadata, terms_version, training_version
 from openpilot.system.hardware.hw import Paths
+from openpilot.selfdrive.car.shutdown_policy import can_reboot_while_started
 
 from openpilot.starpilot.common.starpilot_functions import starpilot_boot_functions, install_starpilot, uninstall_starpilot
 from openpilot.starpilot.common.starpilot_variables import (
@@ -731,15 +732,38 @@ def manager_init() -> None:
 
 
 def manager_cleanup() -> None:
-  # send signals to kill all procs
-  for p in managed_processes.values():
+  # card may need to re-enable a disabled longitudinal ECU before pandad exits.
+  if (card_process := managed_processes.get("card")) is not None:
+    card_process.stop(block=True)
+
+  # send signals to kill all remaining procs
+  for name, p in managed_processes.items():
+    if name == "card":
+      continue
     p.stop(block=False)
 
-  # ensure all are killed
-  for p in managed_processes.values():
+  # ensure all remaining procs are killed
+  for name, p in managed_processes.items():
+    if name == "card":
+      continue
     p.stop(block=True)
 
   cloudlog.info("everything is dead")
+
+
+def _current_car_params_for_shutdown(params: Params, sm: messaging.SubMaster) -> car.CarParams:
+  if sm.seen['carParams']:
+    return sm['carParams']
+
+  carparams_blob = params.get("CarParams") or params.get("CarParamsPersistent")
+  if carparams_blob is not None:
+    try:
+      with car.CarParams.from_bytes(carparams_blob) as cp:
+        return cp.as_builder()
+    except Exception:
+      cloudlog.exception("Failed to read cached CarParams for shutdown policy")
+
+  return sm['carParams']
 
 
 def manager_thread() -> None:
@@ -756,7 +780,7 @@ def manager_thread() -> None:
     ignore.append("pandad")
   ignore += [x for x in os.getenv("BLOCK", "").split(",") if len(x) > 0]
 
-  sm = messaging.SubMaster(['deviceState', 'carParams', 'pandaStates'], poll='deviceState')
+  sm = messaging.SubMaster(['deviceState', 'carParams', 'pandaStates', 'selfdriveState', 'carState'], poll='deviceState')
   pm = messaging.PubMaster(['managerState'])
 
   write_onroad_params(False, params)
@@ -827,7 +851,14 @@ def manager_thread() -> None:
     for param in ("DoUninstall", "DoShutdown", "DoReboot"):
       if param == "DoReboot" and started:
         if params.get_bool(param):
-          if not warned_onroad_reboot:
+          messages_alive = sm.all_alive(['selfdriveState', 'carState'])
+          CP = _current_car_params_for_shutdown(params, sm)
+          if can_reboot_while_started(CP, sm['selfdriveState'], sm['carState'], messages_alive=messages_alive):
+            shutdown = True
+            warned_onroad_reboot = False
+            params.put("LastManagerExitReason", f"{param} parked onroad {datetime.datetime.now()}")
+            cloudlog.warning("Shutting down manager - DoReboot set while parked on Hyundai CAN-FD")
+          elif not warned_onroad_reboot:
             cloudlog.warning("ignoring DoReboot while onroad; deferring until offroad")
             warned_onroad_reboot = True
         continue

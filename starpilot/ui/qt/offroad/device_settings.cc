@@ -205,7 +205,7 @@ StarPilotDevicePanel::StarPilotDevicePanel(StarPilotSettingsWindow *parent, bool
       }
 
       if (StarPilotConfirmationDialog::toggleReboot(this)) {
-        Hardware::reboot();
+        params.putBool("DoReboot", true);
       }
     });
   }

@@ -423,7 +423,7 @@ StarPilotDataPanel::StarPilotDataPanel(StarPilotSettingsWindow *parent, bool for
 
             util::sleep_for(2500);
 
-            Hardware::reboot();
+            params.putBool("DoReboot", true);
           }).detach();
         }
       }
